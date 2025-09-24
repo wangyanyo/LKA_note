@@ -705,9 +705,23 @@
  					[3] void (*yield_task) (struct rq *rq);
  						当进程自愿放弃对处理器的控制权时，会调用sched_yield
  					[4] void (*check_preempt_curr) (struct rq *rq, struct task_struct *p);
- 						 
+ 						在必要的情况下，会调用check_preempt_curr，用一个新唤醒的进程来抢占当前进程，例如使用wake_up_new_task唤醒新进程时，会调用此函数
+ 					[5] struct task_struct * (*pick_next_task) (struct rq *rq);
+ 					    void (*put_prev_task) (struct rq *rq, struct task_struct *p);
+ 						pick_next_task用于选择下一个将要运行的进程，而put_prev_task则在用另一个进程代替当前运行的进程之前调用
+ 					[6] void (*set_curr_task) (struct rq *rq);
+ 						在进程的调度策略更新时，会调用set_curr_task
+ 					[7] void (*task_tick) (struct rq *rq, struct task_struct *p);
+ 						每次激活周期性调度器时，由周期调度器调用task_tick
+ 					[8] void (*task_new) (struct rq *rq, struct task_struct *p);
+ 						new_task用于建立fork系统调用与调度器的联系，每次创建新进程都会调用task_new
  				(4) 内核封装函数
+ 					[1] 标准函数activate_task和deactivate_task调用前述的函数，提供进程入队和离队操作，同时还维护了一些统计变量
+ 					[2] 内核还提供了一个便捷函数check_preempt_curr，调用与给定进程相关的check_preempt_curr
  				(5) 调度策略与调度器类的映射
+ 					[1] 用户没办法直接设置进程的调度器类，一般情况下，子进程会继承父进程的调度器类
+ 					[2] 用户可以设置进程的调度策略，内核会根据调度策略选择其映射的调度器类
+ 			3. 就绪队列
                  		
                         (1) 通用调度器
                         (2) 调度类和任务切换
@@ -734,7 +748,7 @@
                                 (11) 将调度策略映射到调度器类(fork中实现)
                         3. 就绪队列
                                 (1) 就绪队列结构
-                                        [1] nr_running
+                                        [1] nr_running	
                                         [2] load
                                         [3] cfs, rt
                                         [4] curr
