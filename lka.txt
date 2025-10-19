@@ -946,7 +946,6 @@
 						了两个机制：
 						1. 进程运行时，其vruntime稳定地增加，它在红黑树中总是向右移动的，优先级越高的进程虚拟时间增长越慢，向右移动的速度也就越慢，也就更容易被调度
 						2. 如果进程进入睡眠，则其vruntime保持不变，因为每个就绪队列的min_vruntime单调递增，那么在进程醒来时，其在红黑树中的位置就更靠左
-					
 			2. 延迟跟踪
 				(1) 调度延迟的概念
 					[1] 内核有周期调度器时刻监控着进程的执行时间，如果进程执行了太长时间，就会设置进程的TIF_NEED_RESCHED重调度标志，后续主调度器执行调度操作。但是如何判断进程是否执行过长时间呢？这其实是进程在
@@ -959,57 +958,38 @@
 					[2] 根据各个可运行进程的负荷权重，将一个延迟周期的时间在活动进程之间分配，period = __sched_period(); slice = period * (se->load.weight / cfs_rq->load.weight)
 					[3] 计算各个可运行进程的虚拟时间，vtime = period * (NICE_0_LOAD / cfd_rq->load.weight)，vtime = period * (se->load.weight / cfs_rq->load.weight) * (NICE_0_LOAD / se->load.weight)
 						也就是说分配给所有可运行进程的虚拟时间都是相同的
-		
-	2.6 完全公平调度类
-		2.6.1 数据结构
-			(1) 主要的数据结构时cfs就绪队列
-			(2) nr_running代表CFS就绪队列中调度实体的数量，load代表就绪队列中调度实体的累积载荷值
-			(3) min_vruntime代表CFS就绪队列中虚拟执行时间最小的调度实体
-			(4) task_timeline是CFS就绪队列的红黑树，rb_leftmost指向红黑树最左侧的结点
-			(5) curr指向当前执行的调度实体
-		2.6.2 CFS操作
-			1. 虚拟时钟
-				(1) update_curr函数在系统的各种位置被调用，目的是更新就绪队列的虚拟时钟，实际时钟是在调度周期中更新的
-				(2) 首先获取与exec_start的时间差delta，更新exec_start，用delta更新sum_exec_runtime，更新虚拟时钟的操作交给__update_curr函数
-				(3) 在__update_curr中，使用delta * (NICE_0_LOAD / Curr->load.weight) 公式计算虚拟时钟增量，权重越高，虚拟时钟增量越短
-				(4) 更新就绪队列的min_vruntime，在当前虚拟时钟和红黑树中最左侧的结点的虚拟时钟取小的那个，然后与min_vruntime取最大的那个，保证min_vruntime是递增的，
-					也就是说只有红黑树中最左侧的结点的虚拟时钟大于min_vruntime时，min_vruntime才会被更新
-				(5) 就绪队列红黑树根据 se->vruntime - cfs_rq->min_vruntime 的值进行排序
-			2. 延迟跟踪 
-				(1) 内核承诺在 sysctl_sched_latency ms时间内 sched_nr_latency 个进程都至少运行一次，是“完全公平”的基础
-				(2) 实际的调度延迟 __sched_period = sysctl_sched_latency * (nr_running / sched_nr_latency)，和nr_running是线性关系
-				(3) 就绪队列的调度实体所分配到的实际执行时间不能超过 __sched_period * (se->load.weight / cfs_rq->load.weight)，
-					这是CFS调度器要满足的最基本条件，是周期性抢占检查的依据
-				(4) 那么每个调度实体分配的虚拟执行时间都是相同的，即 __sched_period * (NICE_0_LOAD / cfs_rq->load.weight), 
-					因为 vtime = time * (NICE_0_LOAD / weight)
 		2.6.3 队列操作
-			(1) enqueue_task_fair和dequeue_task_fair用于增删就绪队列的成员
-			(2) 在enqueue_task_fair中，首先调用update_curr更新统计量
-			(3) 如果进程刚刚被唤醒，则需要对其虚拟执行时间进行更新，避免其长时间独占CPU，max(cfs_rq->min_vruntime - sysctl_sched_latency, se->vruntime)
-			(4) 使用红黑树标准方法将调度实体加入到就绪队列红黑树中
+			(1) enqueue_task_fair
+				[1] 该函数的参数除了cfs_rq，task_struct指针外，还有一个名为wakeup的参数，如果进程最近才被唤醒并转为可运行状态，wakeup就是1；如果此前就是可运行的，那么wakeup就是0
+				[2] 函数的处理逻辑很简单，如果通过se->on_rq得知进程本来就在就绪队列上，则直接返回；否则，调用enqueue_entity函数，内核还会借助这个时机调用update_curr更新统计量，主要是更新当前进程vruntime
+				[3] 在enqueue_entity函数中执行的逻辑也很简单，如果进程当前没在执行，那么直接调用__enqueue_entity将该进程加入到红黑树中
+				[4] 这里有一个特殊情况，假如即将要加入就绪队列的进程是刚唤醒的进程，那么其vruntime会和cfs_rq->min_vruntime有很大差值，因为睡眠进程的vruntime不变，而cfs_rq->vruntime是单调递增的，这就导致新加入
+					进程在红黑树中更靠左，因此内核设置其se->vruntime = max(cfs_rq->min_vruntime - sysctl_sched_latency, se->vruntime)，避免其长时间占用CPU，也避免不必要的补偿短时间睡眠进程
 		2.6.4 选择下一个进程
-			(1) 选择下一个将要运行的进程由pick_next_task_fair执行
-			(2) 获取就绪队列红黑树最左侧的调度实体
-			(3) 完成一些收尾工作，将进程从红黑树中移除并更新leftmost指针，将进程连接到cfs_rq->curr上，更新sum_exec_runtime
+			(1) pick_next_task_fair
+				[1] CFS通过pick_next_task_fair获取下一个要执行的进程的调度实体
+				[2] 如果就绪队列中没有待执行的进程，直接返回NULL；否则直接选择leftmost对应的最左边的节点，并用container_of机制获取对应的调度实体
+				[3] 调用set_next_entity将该调度实体标记为可运行进程，主要工作是：如果当前进程在红黑树中，则将其移除，设置leftmost为当前最左边的进程，设置cfs_rq->curr，prev_sum_exec_runtime = 
+					sum_exec_runtime，后者不会重置，其统计进程总执行时间，因此sum_exec_runtime-prev_sum_exec_runtime表示了进程在CPU上的执行时间，也就是进程在当前调度所执行的时间
 		2.6.5 处理周期性调度器
-			(1) 周期性调度工作由task_tick_fair函数负责
-			(2) 首先调用update_curr更新统计量
-			(3) 然后调用check_preempt_tick进行抢占检查，只有在队列中的进程数量大于1个时才会进行后续的操作
-			(4) 如果进程的执行时间大于其调度延迟，则设置重调度标志并在下一个适当时机执行抢占
-		2.6.6 唤醒抢占
-			(1) 当在try_to_wake_up和wake_up_new_task中唤醒进程时，内核使用check_preempt_curr函数进行抢占检查，在CFS调度器中对应的函数时check_preempt_wakeup
-			(2) 如果被唤醒任务是实时任务，那么应该直接设置重调度标志，因为实时任务一定会抢占非实时任务
-			(3) 如果被唤醒进程是SCHED_BATCH进程，则直接返回，因为该类进程不会抢占其他进程
-			(4) 按理说被唤醒的进程应该及时运行，但是这一要加上缓冲时间，避免频繁上下文切换，如果被唤醒进程的虚拟执行时间加上缓冲时间仍然小于当前任务的虚拟执行时间，则应该
-				设置重调度标志。从虚拟时间角度上来看，被唤醒进程就是要及时运行，但是内核给予了两个补偿机制：1. 设置虚拟时间为max(min_vruntime-sysctl_sched_latency, vruntime)，
-				从而避免被唤醒进程独占CPU太长时间。2. 当被唤醒进程的虚拟执行时间加上缓冲时间后仍小于当前进程的虚拟时间时，才设置重调度标志，避免频繁上下文切换。
+			(1) entity_tick
+				[1] 该函数首先调用update_curr更新统计量，主要是当前进程的物理时钟和虚拟时钟
+				[2] 如果当前就绪队列上的进程少于两个，则直接返回，因为即使给当前进程设置了重调度标志，也没有进程能抢占它；否则，计算sum_exec_runtime-prev_sum_exec_runtime，即进程在当前调度所执行的时间是否大于
+					分配的调度周期份额，如果超过，说明进程已经运行了太长时间，设置进程的重调度标志，后续主调度器会在合适的时机执行调度
+		2.6.6 唤醒抢占 
+			(1) check_preempt_wakeup
+				[1] 当内核调用try_to_wake_up或wake_up_new_task时，内核调用check_preempt_wakeup检查被唤醒的进程是否可以抢占当前进程
+				[2] 被唤醒的进程有可能不是由完全公平调度器处理，如果被唤醒的进程是实时进程，则直接抢占当前进程，因为实时进程总是会抢占CFS进程
+				[3] 内核保证被抢占的进程必须已经执行了最小时间限额，由sysctl_sched_wakeup_granularity，默认是4ms。内核将这个值转换成被唤醒进程对应的虚拟时间，设为gran，如果被唤醒进程的虚拟时间+gran小于当前进程
+					的虚拟时间，才会执行抢占。这里的设计思路是什么呢？进程可能是被某些事件或信号唤醒的，唤醒它就是为了尽快处理该事件，因此我们肯定是希望被唤醒的进程要尽快运行，但是如果事件发生的非常频繁，那么进程
+					也会切换的非常频繁，这样大部分的时间都被浪费在上下文切换上了，加入一个时间缓冲有助于减轻这种情况
 		2.6.7 处理新进程
-			(1) CFS调度器使用task_new_fair函数处理新创建的进程
-			(2) 首先使用update_curr更新统计量
-			(3) 然后使用place_entity计算任务的初始虚拟运行时间
-			(4) 保证子进程先于父进程运行，因此如果父进程的虚拟执行时间小于子进程，则将他们的虚拟执行时间互换。因为此时这两个进程都不在红黑树内，因此不会影响红黑树的状态。
-			(5) 使用enqueue_task_fair将子进程放入红黑树，不会重复执行place_entity，因为enqueue_task_fair中必须满足wakeup条件才会执行place_entity
-			(6) 设置重调度标志，也就是说每次创建新进程都要重调度
+			(1) task_new_fair
+				[1] 当内核使用fork家族系统调用创建新进程时，主调度器会调用task_new_fair经普通进程挂钩到CFS调度器上
+				[2] 首先利用这个时机调用update_curr更新统计量，然后调用place_entity函数，之前enqueue_entity_fair也调用过该函数，用于初始化新加入就绪队列进程vruntime。如果参数sysctl_sched_child_runs_first
+					为1并且当前进程的vruntime大于父进程的vruntime，则交换二者的vruntime，目的是保证新创建的子进程优先于父进程运行，这样做是有意义的，尤其是在子进程马上会执行exec系统调用家在新程序时，父子进程
+					的地址空间是写时复制的关系，如果父进程先运行，那么可能会发生写时复制，有额外的复制时间，这个复制是没必要的，因此子进程马上要加载新程序；如果子进程先运行，则其马上执行exec系统调用执行新进程，父子
+					进程之间没有了写时复制的关系，后续父进程再运行就不会有额外的复制开销了
 	2.7 实时调度类
 		(1) Linux还支持两种实时调度类，有两种检测进程是否是实时进程：1. 检查优先级，2. 检查调度策略
 		(2) 和我所接触的Litmus实时任务不同，没有周期和截止时间等的概念。Linux的实时调度类只是一种调度风格，其各种操作都相对简单粗暴
