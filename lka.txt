@@ -1051,6 +1051,23 @@
 					[5] 如果均衡失败，即移动的进程的负荷权重之和小于目标值，比如最忙碌的就绪队列上的进程都是高优先级进程，内核只移动一部分导致均衡失败，此时将唤醒最忙的就绪队列的迁移线程，并设置其load_active为1，并将发起请求
 						的cpu记录到push_cpu
 			2. 迁移进程
+				(1) 所有负载均衡场景
+					[1] 周期性负载均衡，起点是周期性调度器，检查距离上一次负载均衡是否过去太长时间，如果是则调用load_balance函数，该函数选择最忙碌的就绪队列，将其多个合适进程迁移到当前CPU就绪队列
+					[2] 主动负载均衡：当周期性负载均衡失败时，会申请主动负载均衡，它会设置busiest_rq->active_balance = 1，busiest_rq->push_cpu = this_cpu，并唤醒busiest_rq->migration_thread
+					[3] 调度器迁移请求：有两个场景调度器会主动申请迁移，一个是进程执行exec系统调用加载新程序时，因为此时高速缓存中没有该进程的数据，在此时进行负载均衡是最恰当的，内核会选择负荷最少的就绪队列，并创建一个迁移
+						请求，即migration_req实例，该实例有四个成员，list, task, dest_cpu, done，task设置成当前进程，dest_cpu设置成负荷最小的CPU，list用于连接到rq->migration_queue链表上，done用于实现complete
+						机制，内核创建完迁移请求即migration_req实例后，将该实例连接到rq->migration_queue上，唤醒rq->migration_thread，然后执行wait_for_completion函数等待迁移线程处理完成，这个是complete机制的
+						一部分，struct completion结构里面有一个链表，进程调用wait_for_completion会将自身的task_struct实例挂在这个链表上，然后进入睡眠状态，如果其他进程对该comletion实例执行complete函数，就会唤醒
+						该链表的所有进程。rq->migration_thread执行完对应请求后就调用complete唤醒被迁移进程，也就是说被迁移的进程要等待迁移结束才能再次运行。调度器主动申请迁移还有另一个场景，那就是设置进程CPU亲和性时，
+						如果进程与当前CPU不是亲和的，那么内核会创建一个调度请求，将该进程迁移到任意一个亲和的CPU上，处理的流程和上一个场景一致
+				(2) 迁移进程流程
+					[1] 迁移线程内部是一个无限循环，如果无事可做则其会进入睡眠状态
+					[2] 若迁移线程被唤醒，首先会检查当前CPU的就绪队列的active_balance，如果其置为一，则调用active_load_balance函数，该函数会调用move_one_task函数，该函数会依次调用各个调度类的move_one_task函数，
+						调度类的move_one_task函数会生成一个迭代器，然后调用iter_move_one_task函数，直到成功迁移一个合适的进程到rq->push_cpu，iter_move_one_task函数只会检查被迁移进程的三个核心条件，不再关注
+						优先级，按书中的说法是，这个迁移策略较load_balance更激烈
+					[3] 接下来会检查migration_queue中有无迁移请求，若没有则进入主调度器函数执行调度，如果有迁移请求则对第一个请求调用__migrate_task函数直接迁移，其实就是将进程从原队列中取出，然后更新下进程vruntime，还有
+						一些统计量，然后就将该进程放入到新队列中即可，然后进入migthread_thread的下一次循环
+						
 		2.8.2 调度域和控制组
 		2.8.3 内核抢占和低延迟
 第3章 内存管理
