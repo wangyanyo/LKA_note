@@ -1,0 +1,12 @@
+#ifndef __CONFIG_H
+#define __CONFIG_H
+
+#define VGA_WIDTH 80
+#define VGA_HEIGHT 20
+
+#define KERNEL_CODE_SELECTOR 0x08
+#define KERNEL_DATA_SELECTOR 0x10
+
+#define KERNEL_TOTAL_INTERRUPTS 256
+
+#endif
