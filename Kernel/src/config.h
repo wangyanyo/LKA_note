@@ -1,6 +1,8 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
+#define KERNEL_CPU_BITS 32
+
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 20
 

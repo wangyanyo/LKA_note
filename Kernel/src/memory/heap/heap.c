@@ -1,6 +1,7 @@
 #include "heap.h"
 #include "status.h"
 #include "memory/memory.h"
+#include "terminal/print.h"
 #include <stdbool.h>
 
 static int heap_validate_table(void *ptr, void *end, struct heap_table *table)
@@ -61,6 +62,7 @@ static int heap_get_start_block(struct heap *heap, uint32_t total_blocks)
                 if (!heap_get_entry_type(table->enteies[i]) == HEAP_BLOCK_TABLE_ENTRY_FREE) {
                         bc = 0;
                         bs = -1;
+                        continue;
                 }
 
                 if (bs == -1)
