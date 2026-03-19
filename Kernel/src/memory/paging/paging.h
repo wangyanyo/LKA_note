@@ -9,18 +9,18 @@
 #define PAGING_WRITE_THROUGH   0b00001000
 #define PAGING_ACCESS_FROM_ALL 0b00000100
 #define PAGING_IS_WRITEABLE    0b00000010
-#define PAGING_IS_PERSENT      0b00000001
+#define PAGING_IS_PRESENT      0b00000001
 
 #define PAGING_TOTAL_ENTRIES_PER_TABLE 1024
 #define PAGING_PAGE_SIZE 4096
 
-struct paging_4gb_trunk {
+struct paging_4gb_chunk {
         uint32_t *directory_entry;
 };
 
-struct paging_4gb_trunk *paging_new_4gb_trunk(uint8_t flag);
+struct paging_4gb_chunk *paging_new_4gb_chunk(uint8_t flag);
 void paging_switch(uint32_t *directory);
-uint32_t *paging_4gb_trunk_get_directory(struct paging_4gb_trunk *trunk);
+uint32_t *paging_4gb_chunk_get_directory(struct paging_4gb_chunk *chunk);
 void enable_paging();
 
 int paging_set(uint32_t *directory, void *virtual, uint32_t val);
