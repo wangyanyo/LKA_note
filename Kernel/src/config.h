@@ -18,4 +18,6 @@
 
 #define KERNEL_SECTOR_SIZE 512
 
+#define KERNEL_MAX_PATH 108
+
 #endif

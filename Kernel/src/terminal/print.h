@@ -8,6 +8,8 @@ void terminal_initialize();
 
 void terminal_print(const char* str);
 
+void terminal_print_endl(const char* str);
+
 void terminal_print_num(unsigned long num);
 
 void terminal_print_hex(unsigned long num);

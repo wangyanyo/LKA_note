@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 
-void* memset(void* ptr, char c, size_t size);
+void *memset(void *ptr, char c, size_t size);
+int memcmp(void *p1, void *p2, size_t size);
 
 #endif

@@ -1,5 +1,6 @@
 #include "print.h"
 #include "config.h"
+#include "string/string.h"
 
 #define DEFAULT_STRING_SIZE (KERNEL_CPU_BITS + 1)
 #define NUM_CHAR_SET_SIZE 17
@@ -37,15 +38,6 @@ static void terminal_write_char(char c, char color)
 	}
 }
 
-static size_t strlen(const char* str)
-{
-	size_t len = 0;
-	while (str[len]) {
-		len++;
-	}
-	return len;
-}
-
 void terminal_initialize()
 {
 	vedio_mem = (uint16_t*)(0xB8000);
@@ -58,10 +50,16 @@ void terminal_initialize()
 
 void terminal_print(const char* str)
 {
-	size_t len = strlen(str);
+	int len = strlen(str);
 	for (int i = 0; i < len; ++i) {
 		terminal_write_char(str[i], 15);
 	}
+}
+
+void terminal_print_endl(const char* str)
+{
+	terminal_print(str);
+	terminal_print("\n");
 }
 
 static void __ulong_to_string(unsigned long num, char *str, uint32_t size, uint32_t base)

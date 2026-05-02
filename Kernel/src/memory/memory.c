@@ -1,10 +1,21 @@
 #include "memory.h"
 
-void* memset(void* ptr, char c, size_t size)
+void *memset(void *ptr, char c, size_t size)
 {
         char* c_ptr = (char*)ptr;
-        for(size_t i = 0; i < size; ++i) {
+        for (size_t i = 0; i < size; ++i) {
                 c_ptr[i] = c;
         }
         return ptr;
+}
+
+int memcmp(void *p1, void *p2, size_t size)
+{
+        char *s1 = p1;
+        char *s2 = p2;
+        for (size_t i = 0; i < size; ++i) {
+                if (s1[i] != s2[i])
+                        return s1[i] < s2[i] ? -1 : 1;
+        }
+        return 0;
 }

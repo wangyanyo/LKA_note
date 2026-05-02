@@ -5,6 +5,7 @@
 #include "memory/heap/kheap.h"
 #include "memory/paging/paging.h"
 #include "disk/disk.h"
+#include "fs/pparser.h"
 
 struct paging_4gb_chunk *kernel_chunk = 0;
 
@@ -41,4 +42,15 @@ void kernel_main()
 	/***************************************************************/
 
 	enable_interrupts();
+
+	struct path_root *root_path = pathparser_parse("0:/bin/shell.exe", NULL);
+	if (root_path)
+		return;
+
+	terminal_print_num(root_path->drive_no);
+	struct path_part *path_part = root_path->first;
+	while (path_part) {
+		terminal_print_endl(path_part->part);
+		path_part = path_part->next;
+	}
 }
