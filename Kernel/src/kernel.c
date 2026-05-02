@@ -6,6 +6,7 @@
 #include "memory/paging/paging.h"
 #include "disk/disk.h"
 #include "fs/pparser.h"
+#include "disk/streamer.h"
 
 struct paging_4gb_chunk *kernel_chunk = 0;
 
@@ -44,7 +45,7 @@ void kernel_main()
 	enable_interrupts();
 
 	struct path_root *root_path = pathparser_parse("0:/bin/shell.exe", NULL);
-	if (root_path)
+	if (!root_path)
 		return;
 
 	terminal_print_num(root_path->drive_no);
@@ -53,4 +54,12 @@ void kernel_main()
 		terminal_print_endl(path_part->part);
 		path_part = path_part->next;
 	}
+
+	// struct disk_stream *stream = diskstream_new(0);
+	// diskstream_seek(stream, 0x201);
+	// unsigned char c = 0;
+	// diskstream_read(stream, &c, 1);
+	// while(1) {}
+
+	terminal_print_endl("end");
 }

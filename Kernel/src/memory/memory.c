@@ -1,4 +1,5 @@
 #include "memory.h"
+#include "status.h"
 
 void *memset(void *ptr, char c, size_t size)
 {
@@ -18,4 +19,13 @@ int memcmp(void *p1, void *p2, size_t size)
                         return s1[i] < s2[i] ? -1 : 1;
         }
         return 0;
+}
+
+void* memcpy(void* dest, const void* src, unsigned n)
+{
+	int i;
+	char *d = (char *)dest, *s = (char *)src;
+
+	for (i=0;i<n;i++) d[i] = s[i];
+	return dest;
 }
