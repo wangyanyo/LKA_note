@@ -1,4 +1,7 @@
-Kernel/bin/
-Kernel/build
+Kernel/build/**
+Kernel/bin/**
 
-!*/.keep
+!Kernel/build/**/
+!Kernel/bin/**/
+
+!Kernel/**/.keep
