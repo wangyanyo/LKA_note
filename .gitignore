@@ -1,4 +1,4 @@
 Kernel/bin/
 Kernel/build
 
-!.keep
+!*/.keep
