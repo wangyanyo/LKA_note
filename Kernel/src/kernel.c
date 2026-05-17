@@ -7,6 +7,8 @@
 #include "disk/disk.h"
 #include "fs/pparser.h"
 #include "disk/streamer.h"
+#include "fs/file.h"
+#include "string/string.h"
 
 struct paging_4gb_chunk *kernel_chunk = 0;
 
@@ -16,6 +18,8 @@ void kernel_main()
 	terminal_print("Hello World!\n");
 
 	kheap_init();
+
+	fs_init();
 
 	disk_search_and_init();
 
@@ -60,6 +64,10 @@ void kernel_main()
 	// unsigned char c = 0;
 	// diskstream_read(stream, &c, 1);
 	// while(1) {}
+
+	char buf[20];
+	strcpy(buf, "Hello World!");
+	terminal_print_endl(buf);
 
 	terminal_print_endl("end");
 }
