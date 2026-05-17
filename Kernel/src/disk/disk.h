@@ -5,10 +5,13 @@ typedef unsigned int KERNEL_DISK_TYPE;
 
 #define KERNEL_DISK_TYPE_REAL 0
 
-struct disk
-{
+#include "fs/file.h"
+
+// 目前disk的描述信息还很少
+struct disk {
         KERNEL_DISK_TYPE type;
         int sector_size;
+        struct filesystem *filesystem;
 };
 
 void disk_search_and_init();
