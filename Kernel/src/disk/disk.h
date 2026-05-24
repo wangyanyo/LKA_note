@@ -10,8 +10,10 @@ typedef unsigned int KERNEL_DISK_TYPE;
 // 目前disk的描述信息还很少
 struct disk {
         KERNEL_DISK_TYPE type;
+        int id;
         int sector_size;
         struct filesystem *filesystem;
+        void *fs_private;
 };
 
 void disk_search_and_init();
