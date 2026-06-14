@@ -72,9 +72,12 @@ void kernel_main()
 	int fd = fopen("0:/hello.txt", "r");
 	terminal_print_num(fd);
 	if (fd)
-	{
-		terminal_print_endl("We opened hello.txt\n");
-    	}
+		terminal_print_endl("We opened /hello.txt");
+
+	fd = fopen("0:/home/hello_2.txt", "r");
+	terminal_print_num(fd);
+	if (fd)
+		terminal_print_endl("We opened /home/hello_2.txt");
 
 	terminal_print_endl("end");
 }

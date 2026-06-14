@@ -8,6 +8,7 @@
 #include "config.h"
 #include "tool.h"
 #include "status.h"
+#include "terminal/print.h"
 
 #define KERNEL_FAT16_SIGNATURE 0x29
 #define KERNEL_FAT16_FAT_ENTRY_SIZE 0x02
@@ -379,7 +380,7 @@ static struct fat_item *fat16_new_fat_item_for_directory_item(struct disk *disk,
 
 static void fat16_to_proper_string(char **out, const char *in)
 {
-	while (*in != 0x00 && *in == 0x20) {
+	while (*in != 0x00 && *in != 0x20) {
 		**out = *in;
 		*out += 1;
 		in += 1;
@@ -393,7 +394,7 @@ static void fat16_get_full_relative_filename(struct fat_directory_item *item, ch
 	char *out_tmp = out;
 	fat16_to_proper_string(&out_tmp, (const char *)item->filename);
 	if (item->ext[0] != 0x00 && item->ext[0] != 0x20) {
-		*out_tmp = '.';
+		*out_tmp++ = '.';
 		fat16_to_proper_string(&out_tmp, (const char *)item->ext);
 	}
 }
@@ -426,7 +427,7 @@ static struct fat_item *fat16_get_directory_entry(struct disk *disk, struct path
 	struct fat_private *fat_private = disk->fs_private;
 	struct fat_item *current_item = NULL;
 	struct fat_item *root_item = fat16_find_item_in_directory(disk, &fat_private->root_directory, path->part);
-	if (root_item)
+	if (!root_item)
 		goto out;
 
 	struct path_part *next_part = path->next;
