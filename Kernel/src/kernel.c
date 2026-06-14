@@ -69,5 +69,12 @@ void kernel_main()
 	strcpy(buf, "Hello World!");
 	terminal_print_endl(buf);
 
+	int fd = fopen("0:/hello.txt", "r");
+	terminal_print_num(fd);
+	if (fd)
+	{
+		terminal_print_endl("We opened hello.txt\n");
+    	}
+
 	terminal_print_endl("end");
 }

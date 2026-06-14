@@ -7,6 +7,7 @@
 #define ENOMEM 3
 #define EBADPATH 4
 #define EFSNOTUS 5
+#define ERDONLY 6
 
 #define ERROR(value) (void *)(value)
 #define ERROR_I(value) (int)(value)
