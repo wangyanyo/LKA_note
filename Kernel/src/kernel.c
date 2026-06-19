@@ -78,8 +78,15 @@ void kernel_main()
 	terminal_print_num(fd);
 	if (fd)
 		terminal_print_endl("We opened /home/hello_2.txt");
-	
-	int res = fread(buf, 20, 1, fd);
+
+	int res = 0;
+	res = fseek(fd, 2, SEEK_SET);
+	if (res < 0)
+		terminal_print_endl("seek set fail");
+	res = fseek(fd, 1, SEEK_CUR);
+	if (res < 0)
+		terminal_print_endl("seek cur fail");
+	res = fread(buf, 20, 1, fd);
 	if (res < 0)
 		terminal_print_endl("fread fail");
 	buf[11] = 0x00;
