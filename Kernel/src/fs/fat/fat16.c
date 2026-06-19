@@ -118,10 +118,12 @@ struct fat_private {
 
 int fat16_resolve(struct disk *disk);
 void *fat16_open(struct disk *disk, struct path_part *path, FILE_MODE mode);
+int fat16_read(struct disk *disk, void *descriptor, uint32_t size, uint32_t nmemb, char *out_ptr);
 
 struct filesystem fat16_fs = {
         .open = fat16_open,
         .resolve = fat16_resolve,
+	.read = fat16_read,
 };
 
 struct filesystem *fat16_init()
@@ -575,5 +577,26 @@ out:
 		fat16_free_private(fat_private);
 		disk->fs_private = NULL;
 	}
+	return res;
+}
+
+int fat16_read(struct disk *disk, void *descriptor, uint32_t size, uint32_t nmemb, char *out_ptr)
+{
+	int res = 0;
+	struct fat_item_descriptor *fat_desc = descriptor;
+	struct fat_directory_item *item = fat_desc->item->item;
+	int offset = fat_desc->pos;
+
+	for (uint32_t i = 0; i < nmemb; ++i) {
+		res = fat16_read_internal(disk, fat16_get_first_cluster(item), offset, size, out_ptr);
+		if (res < 0)
+			goto out;
+
+		offset += size;
+		out_ptr += size;
+	} 
+
+	res = nmemb;
+out:
 	return res;
 }

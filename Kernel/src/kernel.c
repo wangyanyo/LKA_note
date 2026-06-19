@@ -65,7 +65,7 @@ void kernel_main()
 	// diskstream_read(stream, &c, 1);
 	// while(1) {}
 
-	char buf[20];
+	char buf[30];
 	strcpy(buf, "Hello World!");
 	terminal_print_endl(buf);
 
@@ -78,6 +78,12 @@ void kernel_main()
 	terminal_print_num(fd);
 	if (fd)
 		terminal_print_endl("We opened /home/hello_2.txt");
+	
+	int res = fread(buf, 20, 1, fd);
+	if (res < 0)
+		terminal_print_endl("fread fail");
+	buf[11] = 0x00;
+	terminal_print_endl(buf);
 
 	terminal_print_endl("end");
 }

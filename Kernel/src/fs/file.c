@@ -148,12 +148,12 @@ int fread(void *ptr, uint32_t size, uint32_t nmemb, int fd)
 	}
 
 	desc = file_get_descriptor(fd);
-	if (desc) {
+	if (!desc) {
 		res = -EINVAGS;
 		goto out;
 	}
 
-	res = desc->filesystem->read(fd, desc->private, size, nmemb, ptr);
+	res = desc->filesystem->read(desc->disk, desc->private, size, nmemb, ptr);
 
 out:
 	return res;
