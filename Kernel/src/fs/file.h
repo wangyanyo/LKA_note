@@ -21,7 +21,7 @@ enum {
 
 typedef unsigned int FILE_STAT_FLAGS;
 enum {
-        FILE_STAT_FLAG_ONLY_READ,
+        FILE_STAT_READ_ONLY = 0b00000001,
 };
 
 struct file_stat {

@@ -181,6 +181,11 @@ int fstat(int fd, struct file_stat *stat)
 	int res = 0;
 	struct file_descriptor *desc = NULL;
 
+	if (!stat) {
+		res = -EINVAGS;
+		goto out;
+	}
+
 	desc = file_get_descriptor(fd);
 	if (!desc) {
 		res = -EINVAGS;

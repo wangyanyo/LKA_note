@@ -91,6 +91,12 @@ void kernel_main()
 		terminal_print_endl("fread fail");
 	buf[11] = 0x00;
 	terminal_print_endl(buf);
+	struct file_stat stat;
+	res = fstat(fd, &stat);
+	if (res < 0)
+		terminal_print_endl("fstat fail");
+	terminal_print_num(stat.filesize);
+	terminal_print_num(stat.flags);
 
 	terminal_print_endl("end");
 }
