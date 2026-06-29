@@ -74,6 +74,13 @@ static int file_new_descriptor(struct file_descriptor** desc_out)
 	return res;
 }
 
+static void file_free_descriptor(int fd)
+{
+	struct file_descriptor* desc = file_descriptors[fd - 1];
+	file_descriptors[fd - 1] = NULL;
+	kfree(desc);
+}
+
 static struct file_descriptor *file_get_descriptor(int fd)
 {
 	if (fd <= 0 || fd > KERNEL_MAX_FILE_DESCRIPTORS)
@@ -193,6 +200,27 @@ int fstat(int fd, struct file_stat *stat)
 	}
 
 	res = desc->filesystem->stat(desc->disk, desc->private, stat);
+
+out:
+	return res;
+}
+
+int fclose(int fd)
+{
+	int res = 0;
+	struct file_descriptor *desc = NULL;
+
+	desc = file_get_descriptor(fd);
+	if (!desc) {
+		res = -EINVAGS;
+		goto out;
+	}
+
+	res = desc->filesystem->close(desc->private);
+	if (res)
+		goto out;
+
+	file_free_descriptor(fd);
 
 out:
 	return res;
