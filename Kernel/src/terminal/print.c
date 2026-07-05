@@ -120,3 +120,9 @@ void terminal_print_hex(unsigned long num)
 	terminal_print(hex_str);
 	terminal_print("\n");
 }
+
+void panic(char *msg)
+{
+	terminal_print_endl(msg);
+	while(1) {}
+}

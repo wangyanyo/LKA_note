@@ -14,4 +14,6 @@ void terminal_print_num(unsigned long num);
 
 void terminal_print_hex(unsigned long num);
 
+void panic(char *msg);
+
 #endif
