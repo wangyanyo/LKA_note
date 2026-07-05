@@ -12,14 +12,19 @@
 #include "gdt/gdt.h"
 #include "config.h"
 #include "memory/memory.h"
+#include "task/tss.h"
 
 struct paging_4gb_chunk *kernel_chunk = 0;
 
-struct gdt real_gdt[KERNEL_TOTAL_GDT_SEGMENTS];
+struct tss tss;
+struct gdt gdt_real[KERNEL_TOTAL_GDT_SEGMENTS];
 struct gdt_structured gdt_structured[KERNEL_TOTAL_GDT_SEGMENTS] = {
-	{.base = 0, .limit = 0, .type = 0x00},
-	{.base = 0, .limit = 0xFFFFFFFF, .type = 0x9a},
-	{.base = 0, .limit = 0xFFFFFFFF, .type = 0x92},
+	{.base = 0x00, .limit = 0x00, .type = 0x00},			/* NULL */
+	{.base = 0x00, .limit = 0xFFFFFFFF, .type = 0x9a},		/* kernel code */
+	{.base = 0x00, .limit = 0xFFFFFFFF, .type = 0x92},		/* kernel data */
+	{.base = 0x00, .limit = 0xFFFFFFFF, .type = 0xF8},		/* user code */
+	{.base = 0x00, .limit = 0xFFFFFFFF, .type = 0xF2},		/* user data */
+	{.base = (uint32_t)&tss, .limit = sizeof(tss), .type = 0xE9}, /* tss */
 };
 
 void kernel_main()
@@ -27,9 +32,9 @@ void kernel_main()
 	terminal_initialize();
 	terminal_print("Hello World!\n");
 
-	memset(real_gdt, 0x00, sizeof(real_gdt));
-	gdt_structured_to_gdt(real_gdt, gdt_structured, KERNEL_TOTAL_GDT_SEGMENTS);
-	gdt_load(real_gdt, sizeof(real_gdt));
+	memset(gdt_real, 0x00, sizeof(gdt_real));
+	gdt_structured_to_gdt(gdt_real, gdt_structured, KERNEL_TOTAL_GDT_SEGMENTS);
+	gdt_load(gdt_real, sizeof(gdt_real));
 
 	kheap_init();
 
@@ -38,6 +43,14 @@ void kernel_main()
 	disk_search_and_init();
 
 	idt_init();
+
+	/* 初始化tss内核栈信息*/
+	memset(&tss, 0x00, sizeof(tss));
+	tss.esp0 = 0x600000;
+	tss.ss0 = KERNEL_DATA_SELECTOR;
+
+	/* 加载tss*/
+	tss_load(0x28);
 
 	kernel_chunk = paging_new_4gb_chunk(PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
 	paging_switch(paging_4gb_chunk_get_directory(kernel_chunk));
