@@ -9,13 +9,27 @@
 #include "disk/streamer.h"
 #include "fs/file.h"
 #include "string/string.h"
+#include "gdt/gdt.h"
+#include "config.h"
+#include "memory/memory.h"
 
 struct paging_4gb_chunk *kernel_chunk = 0;
+
+struct gdt real_gdt[KERNEL_TOTAL_GDT_SEGMENTS];
+struct gdt_structured gdt_structured[KERNEL_TOTAL_GDT_SEGMENTS] = {
+	{.base = 0, .limit = 0, .type = 0x00},
+	{.base = 0, .limit = 0xFFFFFFFF, .type = 0x9a},
+	{.base = 0, .limit = 0xFFFFFFFF, .type = 0x92},
+};
 
 void kernel_main()
 {
 	terminal_initialize();
 	terminal_print("Hello World!\n");
+
+	memset(real_gdt, 0x00, sizeof(real_gdt));
+	gdt_structured_to_gdt(real_gdt, gdt_structured, KERNEL_TOTAL_GDT_SEGMENTS);
+	gdt_load(real_gdt, sizeof(real_gdt));
 
 	kheap_init();
 
