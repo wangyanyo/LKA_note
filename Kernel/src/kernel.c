@@ -97,6 +97,9 @@ void kernel_main()
 		terminal_print_endl("fstat fail");
 	terminal_print_num(stat.filesize);
 	terminal_print_num(stat.flags);
+	res = fclose(fd);
+	if (res < 0)
+		terminal_print_endl("fclose fail");
 
 	terminal_print_endl("end");
 }
