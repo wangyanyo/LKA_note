@@ -72,3 +72,15 @@ bool paging_is_aligned(void *addr)
 {
         return ((unsigned long)addr % PAGING_PAGE_SIZE == 0);        
 }
+
+void paging_free_4gb(struct paging_4gb_chunk *chunk)
+{
+	for (int i = 0; i < PAGING_TOTAL_ENTRIES_PER_TABLE; ++i) {
+		uint32_t entry = chunk->directory_entry[i];
+		uint32_t *table = (uint32_t *)(entry & 0xFFFFF000);
+		kfree(table);
+	}
+
+	kfree(chunk->directory_entry);
+	kfree(chunk);
+}
