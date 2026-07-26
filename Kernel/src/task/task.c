@@ -1,6 +1,7 @@
 #include "task/task.h"
 #include "memory/heap/kheap.h"
 #include "status.h"
+#include "terminal/print.h"
 
 struct task *current_task = 0;
 
@@ -106,5 +107,29 @@ int task_free(struct task *task)
 	task_list_remove(task);
 
 	kfree(task);
+	return 0;
+}
+
+int task_switch(struct task *task)
+{
+	current_task = task;
+	paging_switch(task->page_directory->directory_entry);
+	return 0;
+}
+
+int task_page(struct task *task)
+{
+	user_registers();
+	task_switch(task);
+	return 0;
+}
+
+int task_run_first_ever_task()
+{
+	if (!current_task)
+		panic("task_run_first_ever_task: No current task exists!\n");
+
+	task_switch(task_head);
+	task_return(&task_head->registers);
 	return 0;
 }
