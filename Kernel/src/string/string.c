@@ -34,6 +34,16 @@ char *strcpy(char *dst, const char *str)
         return res;
 }
 
+char *strncpy(char *dst, const char *str, int n)
+{
+	char *res = dst;
+	for (int i = 0; i < n && str[i]; ++i)
+		dst[i] = str[i];
+	if (n > 0)
+		dst[n - 1] = 0x00;
+	return dst;
+}
+
 int strnlen_terminator(const char *str, int max_len, char terminator)
 {
         int len = 0;

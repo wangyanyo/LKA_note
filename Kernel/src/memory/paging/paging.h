@@ -26,5 +26,6 @@ void enable_paging();
 int paging_set(uint32_t *directory, void *virtual, uint32_t val);
 bool paging_is_aligned(void *addr);
 void paging_free_4gb(struct paging_4gb_chunk *chunk);
+int paging_map_to(uint32_t *directory, void *virt, void *phys, void *phys_end, int flags);
 
 #endif
