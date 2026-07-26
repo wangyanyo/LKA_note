@@ -23,7 +23,7 @@ static void task_insert(struct task *task)
 	task_tail = task;
 }
 
-static int task_init(struct task *task)
+static int task_init(struct task *task, struct process *process)
 {
 	task->page_directory = paging_new_4gb_chunk(PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
 	if (!task->page_directory)
@@ -32,6 +32,8 @@ static int task_init(struct task *task)
 	task->registers.ip = KERNEL_PROGRAM_VIRTUAL_ADDRESS;
 	task->registers.ss = USER_DATA_SEGMENT;
 	task->registers.esp = KERNEL_PROGRAM_VIRTUAL_STACK_ADDRESS_START;
+
+	task->process = process;
 
 	return 0;
 }
@@ -60,7 +62,7 @@ static void task_list_remove(struct task *task)
 	}
 }
 
-struct task *task_new()
+struct task *task_new(struct process *process)
 {
 	int res = 0;
 	struct task *task = NULL;
@@ -71,7 +73,7 @@ struct task *task_new()
 		goto out;
 	}
 
-	res = task_init(task);
+	res = task_init(task, process);
 	if (res != KERNEL_ALL_OK)
 		goto out;
 

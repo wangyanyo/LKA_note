@@ -7,6 +7,17 @@ extern void paging_load_directory(uint32_t *directory);
 
 static uint32_t *current_directory = 0;
 
+static int paging_get_indexes(void *virtual, uint32_t *directory_index, uint32_t *table_index)
+{
+        if (virtual == NULL || directory_index == NULL || table_index == NULL || !paging_is_aligned(virtual)) {
+                return -EINVAGS;
+        }
+
+        *directory_index = (unsigned long)virtual / (PAGING_PAGE_SIZE * PAGING_TOTAL_ENTRIES_PER_TABLE);
+        *table_index = ((unsigned long)virtual % (PAGING_PAGE_SIZE * PAGING_TOTAL_ENTRIES_PER_TABLE)) / PAGING_PAGE_SIZE;
+        return KERNEL_ALL_OK;
+}
+
 struct paging_4gb_chunk *paging_new_4gb_chunk(uint8_t flag)
 {
         uint32_t *directory = kzalloc(sizeof(uint32_t) * PAGING_TOTAL_ENTRIES_PER_TABLE);
@@ -35,17 +46,6 @@ void paging_switch(uint32_t *directory)
 uint32_t *paging_4gb_chunk_get_directory(struct paging_4gb_chunk *chunk)
 {
         return chunk->directory_entry;
-}
-
-static int paging_get_indexes(void *virtual, uint32_t *directory_index, uint32_t *table_index)
-{
-        if (virtual == NULL || directory_index == NULL || table_index == NULL || !paging_is_aligned(virtual)) {
-                return -EINVAGS;
-        }
-
-        *directory_index = (unsigned long)virtual / (PAGING_PAGE_SIZE * PAGING_TOTAL_ENTRIES_PER_TABLE);
-        *table_index = ((unsigned long)virtual % (PAGING_PAGE_SIZE * PAGING_TOTAL_ENTRIES_PER_TABLE)) / PAGING_PAGE_SIZE;
-        return KERNEL_ALL_OK;
 }
 
 int paging_set(uint32_t *directory, void *virtual, uint32_t val)
@@ -85,6 +85,27 @@ void paging_free_4gb(struct paging_4gb_chunk *chunk)
 	kfree(chunk);
 }
 
+int paging_map(uint32_t *directory, void *virt, void *phys, int flags)
+{
+	if ((uint32_t)virt % PAGING_PAGE_SIZE || (uint32_t)phys % PAGING_PAGE_SIZE)
+		return -EINVAGS;
+
+	return paging_set(directory, virt, (uint32_t)phys | flags);
+}
+
+int paging_map_range(uint32_t *directory, void *virt, void *phys, int count, int flags)
+{
+	int res = 0;
+	for (int i = 0; i < count; ++i) {
+		res = paging_map(directory, virt, phys, flags);
+		if (res < 0)
+			return res;
+		virt += PAGING_PAGE_SIZE;
+		phys += PAGING_PAGE_SIZE;
+	}
+	return res;
+}
+
 int paging_map_to(uint32_t *directory, void *virt, void *phys, void *phys_end, int flags)
 {
 	int res = 0;
@@ -114,4 +135,11 @@ int paging_map_to(uint32_t *directory, void *virt, void *phys, void *phys_end, i
 
 out:
 	return res;
+}
+
+void *paging_align_address(void *ptr)
+{
+	if ((uint32_t)ptr % PAGING_PAGE_SIZE)
+		return (void *)((uint32_t)ptr + PAGING_PAGE_SIZE - ((uint32_t)ptr % PAGING_PAGE_SIZE));
+	return ptr;
 }

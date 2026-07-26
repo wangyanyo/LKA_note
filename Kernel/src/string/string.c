@@ -41,7 +41,7 @@ char *strncpy(char *dst, const char *str, int n)
 		dst[i] = str[i];
 	if (n > 0)
 		dst[n - 1] = 0x00;
-	return dst;
+	return res;
 }
 
 int strnlen_terminator(const char *str, int max_len, char terminator)

@@ -74,7 +74,7 @@ static int process_load_data(char *filename, struct process *process)
 static int process_map_binary(struct process *process)
 {
 	int res = 0;
-	res = paging_map_to(process->task->page_directory->directory_entry, KERNEL_PROGRAM_VIRTUAL_ADDRESS, process->ptr,
+	res = paging_map_to(process->task->page_directory->directory_entry, (void *)KERNEL_PROGRAM_VIRTUAL_ADDRESS, process->ptr,
 		paging_align_address(process->ptr + process->size), PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL | PAGING_IS_WRITEABLE);
 	return res;
 }
@@ -84,6 +84,15 @@ static int process_map_memory(struct process *process)
 	int res = 0;
 	res = process_map_binary(process);
 	return res;
+}
+
+static int process_get_free_slot()
+{
+	for (int i = 0; i < KERNEL_MAX_PROCESSES; ++i) {
+		if (processes[i] == NULL)
+			return i;
+	}
+	return -EISTKN;
 }
 
 int process_load_for_slot(char *filename, struct process **process, int process_slot)
@@ -121,7 +130,7 @@ int process_load_for_slot(char *filename, struct process **process, int process_
 	_process->stack = program_stack_ptr;
 
 	/* 创建一个task，并建立映射 */
-	task = task_new();
+	task = task_new(_process);
 	if (!task) {
 		res = -ENOMEM;
 		goto out;
@@ -142,7 +151,25 @@ out:
 	if (IS_ERROR(res)) {
 		if (_process && _process->task)
 			task_free(_process->task);
+		*process = NULL;
+		processes[process_slot] = NULL;
+		kfree(_process);
 	}
 
+	return res;
+}
+
+int process_load(char *filename, struct process **process)
+{
+	int res = 0;
+	int process_slot = process_get_free_slot();
+	if (process_slot < 0) {
+		res = -EISTKN;
+		goto out;
+	}
+	
+	res = process_load_for_slot(filename, process, process_slot);
+
+out:
 	return res;
 }
