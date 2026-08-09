@@ -13,6 +13,8 @@
 #include "config.h"
 #include "memory/memory.h"
 #include "task/tss.h"
+#include "task/process.h"
+#include "task/task.h"
 
 struct paging_4gb_chunk *kernel_chunk = 0;
 
@@ -75,16 +77,16 @@ void kernel_main()
 
 	enable_interrupts();
 
-	struct path_root *root_path = pathparser_parse("0:/bin/shell.exe", NULL);
-	if (!root_path)
-		return;
+	// struct path_root *root_path = pathparser_parse("0:/bin/shell.exe", NULL);
+	// if (!root_path)
+	// 	return;
 
-	terminal_print_num(root_path->drive_no);
-	struct path_part *path_part = root_path->first;
-	while (path_part) {
-		terminal_print_endl(path_part->part);
-		path_part = path_part->next;
-	}
+	// terminal_print_num(root_path->drive_no);
+	// struct path_part *path_part = root_path->first;
+	// while (path_part) {
+	// 	terminal_print_endl(path_part->part);
+	// 	path_part = path_part->next;
+	// }
 
 	// struct disk_stream *stream = diskstream_new(0);
 	// diskstream_seek(stream, 0x201);
@@ -93,20 +95,23 @@ void kernel_main()
 	// while(1) {}
 
 	char buf[30];
-	strcpy(buf, "Hello World!");
-	terminal_print_endl(buf);
+	// strcpy(buf, "Hello World!");
+	// terminal_print_endl(buf);
 
 	int fd = fopen("0:/hello.txt", "r");
 	terminal_print_num(fd);
 	if (fd)
 		terminal_print_endl("We opened /hello.txt");
+	int res = 0;
+	res = fclose(fd);
+	if (res < 0)
+		terminal_print_endl("fclose fail");
 
 	fd = fopen("0:/home/hello_2.txt", "r");
 	terminal_print_num(fd);
 	if (fd)
 		terminal_print_endl("We opened /home/hello_2.txt");
 
-	int res = 0;
 	res = fseek(fd, 2, SEEK_SET);
 	if (res < 0)
 		terminal_print_endl("seek set fail");
@@ -127,6 +132,13 @@ void kernel_main()
 	res = fclose(fd);
 	if (res < 0)
 		terminal_print_endl("fclose fail");
+
+	struct process *process = NULL;
+	res = process_load("0:/blank.bin", &process);
+	if (res < 0)
+		panic("Failed to load blank.bin\n");
+
+	task_run_first_ever_task();
 
 	terminal_print_endl("end");
 }

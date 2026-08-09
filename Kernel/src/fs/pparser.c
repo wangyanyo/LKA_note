@@ -49,6 +49,8 @@ static char *pathparser_get_path_part(const char **path)
         if (**path == '/')
                 *path += 1;
 
+	path_part_str[i] = 0;
+
         if (i == 0) {
                 kfree(path_part_str);
                 path_part_str = NULL;

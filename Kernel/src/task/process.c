@@ -120,7 +120,7 @@ int process_load_for_slot(char *filename, struct process **process, int process_
 	res = process_load_data(filename, _process);
 	if (res != KERNEL_ALL_OK)
 		goto out;
-	
+
 	/* 申请一块栈内存，让stack指向这块内存 */
 	program_stack_ptr = kzalloc(KERNEL_USER_PROGRAM_STACK_SIZE);
 	if (!program_stack_ptr) {
@@ -135,10 +135,11 @@ int process_load_for_slot(char *filename, struct process **process, int process_
 		res = -ENOMEM;
 		goto out;
 	}
+	_process->task = task;
+
 	res = process_map_memory(_process);
 	if (res < 0)
 		goto out;
-	_process->task = task;
 
 	/* 设置id，filename */
 	_process->id = process_slot;

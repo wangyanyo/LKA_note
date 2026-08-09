@@ -32,6 +32,7 @@ static int task_init(struct task *task, struct process *process)
 
 	task->registers.ip = KERNEL_PROGRAM_VIRTUAL_ADDRESS;
 	task->registers.ss = USER_DATA_SEGMENT;
+	task->registers.cs = USER_CODE_SEGMENT;
 	task->registers.esp = KERNEL_PROGRAM_VIRTUAL_STACK_ADDRESS_START;
 
 	task->process = process;
