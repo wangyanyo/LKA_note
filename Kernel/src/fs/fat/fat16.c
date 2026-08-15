@@ -643,6 +643,7 @@ int fat16_seek(void *descriptor, int offset, FILE_SEEK_MODE mode)
 			goto out;
 		}
 		fat_desc->pos += offset;
+		break;
 	default:
 		res = -EINVAGS;
 		break;

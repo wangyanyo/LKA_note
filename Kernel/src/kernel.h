@@ -6,4 +6,7 @@
 
 void kernel_main();
 
+void kernel_page();
+void kernel_register();
+
 #endif

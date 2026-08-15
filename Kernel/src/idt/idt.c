@@ -3,6 +3,8 @@
 #include "terminal/print.h"
 #include "memory/memory.h"
 #include "io/io.h"
+#include "task/task.h"
+#include "kernel.h"
 
 struct idt_desc idt_descriptors[KERNEL_TOTAL_INTERRUPTS];
 struct idtr_desc idtr_descriptor;
@@ -51,4 +53,23 @@ void idt_init()
         idt_set(0x21, int21h);
 
         idt_load(&idtr_descriptor);
+}
+
+void *isr80h_handle_command(int command, struct interrupt_frame *frame)
+{
+	return NULL;
+}
+
+void *isr80h_handler(int command, struct interrupt_frame *frame)
+{
+	void *res = 0;
+	/* 切换到内核态 */
+	kernel_page();
+	/* 更新当前进程的寄存器状态 */
+	task_current_save_state(frame);
+	/* 根据command路由到处理程序 */
+	res = isr80h_handle_command(command, frame);
+	/* 切换回用户态 */
+	task_page();
+	return res;
 }

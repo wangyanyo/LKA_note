@@ -2,6 +2,7 @@
 #include "memory/heap/kheap.h"
 #include "status.h"
 #include "terminal/print.h"
+#include "idt/idt.h"
 
 struct task *current_task = 0;
 
@@ -118,10 +119,10 @@ int task_switch(struct task *task)
 	return 0;
 }
 
-int task_page(struct task *task)
+int task_page()
 {
 	user_registers();
-	task_switch(task);
+	task_switch(current_task);
 	return 0;
 }
 
@@ -133,4 +134,29 @@ int task_run_first_ever_task()
 	task_switch(task_head);
 	task_return(&task_head->registers);
 	return 0;
+}
+
+static void task_save_state(struct task *task, struct interrupt_frame *frame)
+{
+	task->registers.ip = frame->ip;
+	task->registers.cs = frame->cs;
+	task->registers.flags = frame->flags;
+	task->registers.esp = frame->esp;
+	task->registers.ss = frame->ss;
+	task->registers.eax = frame->eax;
+	task->registers.ebp = frame->ebp;
+	task->registers.ebx = frame->ebx;
+	task->registers.ecx = frame->ecx;
+	task->registers.edi = frame->edi;
+	task->registers.edx = frame->edx;
+	task->registers.esi = frame->esi;
+}
+
+void task_current_save_state(struct interrupt_frame *frame)
+{
+	if (!task_current())
+		panic("No current task to save");
+	
+	struct task *task = task_current();
+	task_save_state(task, frame);
 }

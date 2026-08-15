@@ -29,6 +29,12 @@ struct gdt_structured gdt_structured[KERNEL_TOTAL_GDT_SEGMENTS] = {
 	{.base = (uint32_t)&tss, .limit = sizeof(tss), .type = 0xE9}, /* tss */
 };
 
+void kernel_page()
+{
+	kernel_register();
+	paging_switch(kernel_chunk);
+}
+
 void kernel_main()
 {
 	terminal_initialize();
