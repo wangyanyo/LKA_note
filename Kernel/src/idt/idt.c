@@ -9,9 +9,12 @@
 struct idt_desc idt_descriptors[KERNEL_TOTAL_INTERRUPTS];
 struct idtr_desc idtr_descriptor;
 
+static ISR80H_COMMAND isr80h_commands[KERNEL_MAX_ISR80H_COMMANDS];
+
 extern void idt_load(struct idtr_desc* ptr);
 extern void int21h();
 extern void no_interrupt();
+extern void isr80h_wrapper();
 
 void int21h_handler()
 {
@@ -51,13 +54,32 @@ void idt_init()
 
         idt_set(0, idt_zero);
         idt_set(0x21, int21h);
+	idt_set(0x80, isr80h_wrapper);
 
         idt_load(&idtr_descriptor);
 }
 
-void *isr80h_handle_command(int command, struct interrupt_frame *frame)
+void isr80h_register_command(int command, ISR80H_COMMAND command_func)
 {
-	return NULL;
+	if (command <= 0 || command >= KERNEL_MAX_ISR80H_COMMANDS)
+		panic("The command is out of bounds\n");
+
+	if (isr80h_commands[command])
+		panic("Your attempting to overwrite an existing command\n");
+
+	isr80h_commands[command] = command_func;
+}
+
+static void *isr80h_handle_command(int command, struct interrupt_frame *frame)
+{
+	if (command <= 0 || command >= KERNEL_MAX_ISR80H_COMMANDS)
+		return NULL;
+
+	ISR80H_COMMAND command_func = isr80h_commands[command];
+	if (!command_func)
+		return NULL;
+	
+	return command_func(frame);
 }
 
 void *isr80h_handler(int command, struct interrupt_frame *frame)

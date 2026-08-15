@@ -33,9 +33,13 @@ struct interrupt_frame
 	uint32_t ss;
 } __attribute__((packed));
 
+struct interrupt_frame;
+typedef void *(*ISR80H_COMMAND)(struct interrupt_frame *frame);
+
 void idt_init();
 void idt_set(int interrupt_no, void* address);
 void enable_interrupts();
 void disable_interrupts();
+void isr80h_register_command(int command, ISR80H_COMMAND command_func);
 
 #endif
