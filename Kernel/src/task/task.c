@@ -3,6 +3,8 @@
 #include "status.h"
 #include "terminal/print.h"
 #include "idt/idt.h"
+#include "string/string.h"
+#include "kernel.h"
 
 struct task *current_task = 0;
 
@@ -159,4 +161,45 @@ void task_current_save_state(struct interrupt_frame *frame)
 	
 	struct task *task = task_current();
 	task_save_state(task, frame);
+}
+
+int copy_string_from_task(struct task *task, void *virtual, void *phys, int max)
+{
+	int res = 0;
+
+	if (!task || !virtual || !phys) {
+		res = -EINVAGS;
+		goto out;
+	}
+
+	if (max < 0 || max > PAGING_PAGE_SIZE) {
+		res = -EINVAGS;
+		goto out;
+	}
+
+	void *tmp = kzalloc(max);
+	if (!tmp) {
+		res = -ENOMEM;
+		goto out;
+	}
+
+	uint32_t old_entry = paging_get(task->page_directory, virtual);
+	res = paging_map(task->page_directory, tmp, tmp, PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
+	if (res != KERNEL_ALL_OK)
+		goto free_out;
+	paging_switch(task->page_directory);
+	strncpy(tmp, virtual, max);
+	kernel_page();
+
+	res = paging_set(task->page_directory->directory_entry, tmp, old_entry);
+	if (res != KERNEL_ALL_OK)
+		goto free_out;
+
+	strncpy(phys, tmp, max);
+
+free_out:
+	kfree(tmp);
+out:
+	return res;
+
 }
