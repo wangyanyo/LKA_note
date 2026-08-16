@@ -15,6 +15,7 @@
 #include "task/tss.h"
 #include "task/process.h"
 #include "task/task.h"
+#include "isr80h/isr80h.h"
 
 struct paging_4gb_chunk *kernel_chunk = 0;
 
@@ -62,6 +63,8 @@ void kernel_main()
 
 	kernel_chunk = paging_new_4gb_chunk(PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
 	paging_switch(kernel_chunk);
+
+	isr80h_register_commands();
 
 	/* test *********************************************************/
 	char* ptr = kzalloc(4096); 
