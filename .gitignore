@@ -1,3 +1,5 @@
+.vscode
+
 Kernel/build/**
 Kernel/bin/**
 
