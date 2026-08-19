@@ -128,6 +128,13 @@ int task_page()
 	return 0;
 }
 
+int task_page_task(struct task *task)
+{
+	user_registers();
+	task_switch(task);
+	return 0;
+}
+
 int task_run_first_ever_task()
 {
 	if (!current_task)
@@ -202,4 +209,14 @@ free_out:
 out:
 	return res;
 
+}
+
+void *task_get_stack_item(struct task *task, int index)
+{
+	void *result = 0;
+	uint32_t *sp_ptr = (uint32_t *)task->registers.esp;
+	task_page_task(task);
+	result = (void *)sp_ptr[index];
+	kernel_page();
+	return result;
 }

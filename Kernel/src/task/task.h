@@ -43,10 +43,13 @@ void user_registers();
 
 int task_switch(struct task *task);
 int task_page();
+int task_page_task(struct task *task);
 int task_run_first_ever_task();
 
 void task_current_save_state(struct interrupt_frame *frame);
 
 int copy_string_from_task(struct task *task, void *virtual, void *phys, int max);
+
+void *task_get_stack_item(struct task *task, int index);
 
 #endif
