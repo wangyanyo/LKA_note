@@ -2,7 +2,8 @@
 #define __ISR80H_ISR80H_H
 
 enum SystemCommands {
-	SYSTEM_COMMAND0_SUM,	
+	SYSTEM_COMMAND0_SUM,
+	SYSTEM_COMMAND0_PRINT,
 };
 
 void isr80h_register_commands();
