@@ -24,6 +24,13 @@ struct process {
 
 	/* The size of the data pointed by 'ptr' */
 	uint32_t size;
+
+	struct keyboard_buffer {
+		char buffer[KERNEL_KEYBOARD_BUFFER_SIZE];
+		int head;
+		int tail;
+		int size;
+	} keyboard;
 };
 
 struct process *process_get(int process_id);

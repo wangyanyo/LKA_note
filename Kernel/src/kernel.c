@@ -16,6 +16,7 @@
 #include "task/process.h"
 #include "task/task.h"
 #include "isr80h/isr80h.h"
+#include "keyboard/keyboard.h"
 
 struct paging_4gb_chunk *kernel_chunk = 0;
 
@@ -65,6 +66,8 @@ void kernel_main()
 	paging_switch(kernel_chunk);
 
 	isr80h_register_commands();
+
+	keyboard_init();
 
 	/* test *********************************************************/
 	char* ptr = kzalloc(4096); 
