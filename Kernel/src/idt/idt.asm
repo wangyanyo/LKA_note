@@ -2,12 +2,13 @@ section .asm
 extern int21h_handler
 extern no_interrupt_handler
 extern isr80h_handler
-global int21h
+extern interrupt_handler
+
 global idt_load
-global no_interrupt
 global isr80h_wrapper
 global enable_interrupts
 global disable_interrupts
+global interrupt_pointer_table
 
 idt_load:
 	push ebp
@@ -25,17 +26,32 @@ disable_interrupts
 	cli
 	ret
 
-int21h:
-	pushad
-	call int21h_handler
-	popad
-	iret
+%macro interrupt 1
+    global int%1
+    int%1:
+        ; INTERRUPT FRAME START
+        ; ALREADY PUSHED TO US BY THE PROCESSOR UPON ENTRY TO THIS INTERRUPT
+        ; uint32_t ip
+        ; uint32_t cs;
+        ; uint32_t flags
+        ; uint32_t sp;
+        ; uint32_t ss;
+        ; Pushes the general purpose registers to the stack
+        pushad
+        ; Interrupt frame end
+        push esp
+        push dword %1
+        call interrupt_handler
+        add esp, 8
+        popad
+        iret
+%endmacro
 
-no_interrupt:
-	pushad
-	call no_interrupt_handler
-	popad
-	iret
+%assign i 0
+%rep 512
+    interrupt i
+%assign i i+1
+%endrep
 
 isr80h_wrapper:
 	; 寄存器现场
@@ -59,3 +75,14 @@ isr80h_wrapper:
 section .data
 ; 临时存储系统调用返回值
 tmp_res: dd 0
+
+%macro interrupt_array_entry 1
+    dd int%1
+%endmacro
+
+interrupt_pointer_table:
+%assign i 0
+%rep 512
+    interrupt_array_entry i
+%assign i i+1
+%endrep
