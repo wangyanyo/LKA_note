@@ -2,13 +2,14 @@
 #include "status.h"
 #include "task/process.h"
 #include "task/task.h"
+#include "classic.h"
 
 static struct keyboard *keyboard_list_head;
 static struct keyboard *keyboard_list_tail;
 
 void keyboard_init()
 {
-
+	keyboard_insert(classic_init());
 }
 
 int keyboard_insert(struct keyboard *keyboard)
