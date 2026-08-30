@@ -37,44 +37,14 @@ void kernel_page()
 	paging_switch(kernel_chunk);
 }
 
-void kernel_main()
+void kernel_test()
 {
-	terminal_initialize();
 	terminal_print("Hello World!\n");
-
-	memset(gdt_real, 0x00, sizeof(gdt_real));
-	gdt_structured_to_gdt(gdt_real, gdt_structured, KERNEL_TOTAL_GDT_SEGMENTS);
-	gdt_load(gdt_real, sizeof(gdt_real));
-
-	kheap_init();
-
-	fs_init();
-
-	disk_search_and_init();
-
-	idt_init();
-
-	/* 初始化tss内核栈信息*/
-	memset(&tss, 0x00, sizeof(tss));
-	tss.esp0 = 0x600000;
-	tss.ss0 = KERNEL_DATA_SELECTOR;
-
-	/* 加载tss*/
-	tss_load(0x28);
-
-	kernel_chunk = paging_new_4gb_chunk(PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
-	paging_switch(kernel_chunk);
-
-	isr80h_register_commands();
-
-	keyboard_init();
 
 	/* test *********************************************************/
 	char* ptr = kzalloc(4096); 
     	paging_set(paging_4gb_chunk_get_directory(kernel_chunk), (void*)0x1000, (uint32_t)ptr | PAGING_ACCESS_FROM_ALL | PAGING_IS_PRESENT | PAGING_IS_WRITEABLE);
 	/***************************************************************/
-
-	enable_paging();
 
 	/* test *********************************************************/
 	char *ptr2 = (char *)(0x1000);
@@ -86,8 +56,6 @@ void kernel_main()
 	terminal_print(ptr);
 	terminal_print(ptr);
 	/***************************************************************/
-
-	enable_interrupts();
 
 	// struct path_root *root_path = pathparser_parse("0:/bin/shell.exe", NULL);
 	// if (!root_path)
@@ -104,7 +72,6 @@ void kernel_main()
 	// diskstream_seek(stream, 0x201);
 	// unsigned char c = 0;
 	// diskstream_read(stream, &c, 1);
-	// while(1) {}
 
 	char buf[30];
 	// strcpy(buf, "Hello World!");
@@ -144,11 +111,48 @@ void kernel_main()
 	res = fclose(fd);
 	if (res < 0)
 		terminal_print_endl("fclose fail");
+}
+
+void kernel_main()
+{
+	terminal_initialize();
+
+	memset(gdt_real, 0x00, sizeof(gdt_real));
+	gdt_structured_to_gdt(gdt_real, gdt_structured, KERNEL_TOTAL_GDT_SEGMENTS);
+	gdt_load(gdt_real, sizeof(gdt_real));
+
+	kheap_init();
+
+	fs_init();
+
+	disk_search_and_init();
+
+	idt_init();
+
+	/* 初始化tss内核栈信息*/
+	memset(&tss, 0x00, sizeof(tss));
+	tss.esp0 = 0x600000;
+	tss.ss0 = KERNEL_DATA_SELECTOR;
+
+	/* 加载tss*/
+	tss_load(0x28);
+
+	kernel_chunk = paging_new_4gb_chunk(PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
+
+	paging_switch(kernel_chunk);
+
+	enable_paging();
+
+	keyboard_init();
+
+	isr80h_register_commands();
 
 	struct process *process = NULL;
-	res = process_load("0:/blank.bin", &process);
+	int res = process_load("0:/blank.bin", &process);
 	if (res < 0)
 		panic("Failed to load blank.bin\n");
+	
+	kernel_test();
 
 	task_run_first_ever_task();
 
