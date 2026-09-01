@@ -37,6 +37,7 @@ struct process *process_get(int process_id);
 struct process *process_current();
 int process_load_for_slot(char *filename, struct process **process, int process_slot);
 int process_load(char *filename, struct process **process);
+int process_load_switch(char *filename, struct process **process);
 void *paging_align_address(void *ptr);
 
 #endif

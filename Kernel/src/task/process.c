@@ -181,3 +181,23 @@ int process_load(char *filename, struct process **process)
 out:
 	return res;
 }
+
+static int process_switch(struct process *process)
+{
+	/* 不用切换上下文吗？ */
+	current_process = process;
+	return 0;
+}
+
+int process_load_switch(char *filename, struct process **process)
+{
+	int res = 0;
+	res = process_load(filename, process);
+	if (res < 0)
+		goto out;
+
+	res = process_switch(*process);
+
+out:
+	return res;
+}

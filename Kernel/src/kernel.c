@@ -148,7 +148,7 @@ void kernel_main()
 	isr80h_register_commands();
 
 	struct process *process = NULL;
-	int res = process_load("0:/blank.bin", &process);
+	int res = process_load_switch("0:/blank.bin", &process);
 	if (res < 0)
 		panic("Failed to load blank.bin\n");
 	
