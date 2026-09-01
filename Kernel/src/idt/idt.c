@@ -26,16 +26,6 @@ static void idt_zero_callback(struct interrupt_frame *frame)
         terminal_print_endl("Divide by zero error");
 }
 
-static void pic_timer_callback(struct interrupt_frame *frame)
-{
-	terminal_print_endl("Timer activated");
-}
-
-static void keyboard_press_callback(struct interrupt_frame *frame)
-{
-        terminal_print_endl("Keyborad press");
-}
-
 void interrupt_handler(int interrupt, struct interrupt_frame *frame)
 {
 	if (interrupt_callbacks[interrupt] != NULL) {
@@ -72,8 +62,6 @@ void idt_init()
         idt_load(&idtr_descriptor);
 
 	idt_register_interrupt_callback(0x0, idt_zero_callback);
-	idt_register_interrupt_callback(0x20, pic_timer_callback);
-	idt_register_interrupt_callback(0x21, keyboard_press_callback);
 }
 
 int idt_register_interrupt_callback(int interrupt, INTERRUPT_CALLBACK_FUNCTION interrupt_callback)

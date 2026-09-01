@@ -3,6 +3,8 @@
 #include "io/io.h"
 #include <stdint.h>
 #include <stddef.h>
+#include <idt/idt.h>
+#include <task/process.h>
 
 int classic_keyboard_init();
 
@@ -26,8 +28,11 @@ struct keyboard classic_keyboard = {
 	.init = classic_keyboard_init
 };
 
+static void classic_keyboard_handle_interrupt(struct interrupt_frame *frame);
+
 int classic_keyboard_init()
 {
+	idt_register_interrupt_callback(ISR_KEYBOARD_INTERRUPT, classic_keyboard_handle_interrupt);
 	outb(PS2_PORT, PS2_COMMAND_ENABLE_FIRST_PORT);
 	return 0;
 }
@@ -43,9 +48,18 @@ uint8_t classic_keyboard_scancode_to_char(uint8_t scancode)
 }
 
 
-void clasic_keyboard_handle_interrupt()
+static void classic_keyboard_handle_interrupt(struct interrupt_frame *frame)
 {
+	uint8_t scancode = insb(KEYBOARD_INPUT_PORT);
+	insb(KEYBOARD_INPUT_PORT);
 
+	/* 键盘中断分为按下和释放，我们只考虑按下的中断 */
+	if (scancode & CLASSIC_KEYBOARD_KEY_RELEASED)
+		return;
+
+	char c = classic_keyboard_scancode_to_char(scancode);
+	if (c != 0x00)
+		keyboard_push(c);
 }
 
 struct keyboard* classic_init()
