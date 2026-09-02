@@ -48,7 +48,7 @@ static int keyboard_get_last_index(int index)
 void keyboard_push(char c)
 {
 	struct process *process = process_current();
-	if (!process)
+	if (!process || !c)
 		return;
 	
 	if (process->keyboard.size == KERNEL_KEYBOARD_BUFFER_SIZE)
