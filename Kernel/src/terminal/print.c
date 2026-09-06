@@ -21,11 +21,31 @@ static void terminal_put_char(int x, int y, char c, char color)
 	vedio_mem[(y * VGA_WIDTH) + x] = terminal_make_char(c, color);
 }
 
+static void terminal_backspace()
+{
+	if (terminal_col == 0 && terminal_row == 0)
+		return;
+
+	if (terminal_col == 0) {
+		terminal_row--;
+		terminal_col = VGA_WIDTH - 1;
+	} else
+		terminal_col--;
+
+	
+	terminal_put_char(terminal_col, terminal_row, ' ', 15);
+}
+
 static void terminal_write_char(char c, char color)
 {
 	if (c == '\n') {
 		terminal_row++;
 		terminal_col = 0;
+		return;
+	}
+
+	if (c == 0x08) {
+		terminal_backspace();
 		return;
 	}
 
