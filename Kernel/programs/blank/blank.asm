@@ -6,14 +6,18 @@ global _start
 
 _start:
 label:
-	call getkey
 	push message
 	mov eax, 1
 	int 0x80
 	add esp, 4
-	jmp $
+_loop:
+	call getkey
+	push eax
+	mov eax, 3
+	int 0x80
+	add esp, 4
+	jmp _loop
 
-; 轮询获取键盘输入，测试效果是敲击键盘前，终端无打印；敲击键盘后，终端打印'I can talk with the kernel!'
 getkey:
 	mov eax, 2
 	int 0x80

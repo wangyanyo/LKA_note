@@ -121,6 +121,11 @@ void terminal_print_hex(unsigned long num)
 	terminal_print("\n");
 }
 
+void terminal_print_char(char c)
+{
+	terminal_write_char(c, 15);
+}
+
 void panic(char *msg)
 {
 	terminal_print_endl(msg);
