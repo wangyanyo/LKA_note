@@ -134,6 +134,11 @@ out:
 	return res;
 }
 
+void *paging_align_lower_address(void *ptr)
+{
+	return (void *)((uint32_t)ptr - (uint32_t)ptr % PAGING_PAGE_SIZE);
+}
+
 void *paging_align_address(void *ptr)
 {
 	if ((uint32_t)ptr % PAGING_PAGE_SIZE)

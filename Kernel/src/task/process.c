@@ -6,6 +6,7 @@
 #include "memory/memory.h"
 #include "string/string.h"
 #include "loader/formats/elfloader.h"
+#include "terminal/print.h"
 
 static struct process *processes[KERNEL_MAX_PROCESSES] = {};
 static struct process *current_process;
@@ -102,8 +103,8 @@ static int process_map_elf(struct process *process)
 		int flag = PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL;
 		if (phdr->p_flags & PF_W)
 			flag |= PAGING_IS_WRITEABLE;
-		res = paging_map_to(process->task->page_directory, (void *)phdr->p_vaddr, phdr_phys_address,
-			paging_align_address(phdr_phys_address + phdr->p_filesz), flag);
+		res = paging_map_to(process->task->page_directory, paging_align_lower_address((void *)phdr->p_vaddr),
+			phdr_phys_address, paging_align_address(phdr_phys_address + phdr->p_filesz), flag);
 		if (IS_ERROR(res))
 			break;
 	}
@@ -130,7 +131,7 @@ static int process_map_memory(struct process *process)
 			res = process_map_binary(process);
 			break;
 		default:
-			res = -EINVAGS;
+			panic("process_map_memory: Invalid filetype\n");
 	}
 	if (res < 0) 
 		goto out;
