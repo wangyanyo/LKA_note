@@ -10,8 +10,7 @@
 #include "config.h"
 #include "elf.h"
 
-
-const char* elf_signature[] = {0x7f, 'E', 'L', 'F'};
+const char elf_signature[] = {0x7f, 'E', 'L', 'F'};
 
 // 检查ELF魔数（4字节）
 static bool elf_valid_signature(void* buffer)
@@ -99,19 +98,24 @@ void* elf_phys_end(struct elf_file* file)
 	return file->physical_end_address;
 }
 
+void *elf_phdr_phys_address(struct elf_file *file, struct elf32_phdr* phdr)
+{
+	return elf_memory(file) + phdr->p_offset;
+}
+
 int elf_validate_loaded(struct elf_header* header)
 {
 	return (elf_valid_signature(header) &&
 		elf_valid_class(header) &&
 		elf_valid_encoding(header) &&
 		elf_has_program_header(header)) ?
-		KERNEL_ALL_OK : -EINVAGS;
+		KERNEL_ALL_OK : -EINFORMATS;
 }
 
 int elf_process_phdr_pt_load(struct elf_file *elf_file, struct elf32_phdr *phdr)
 {
-	if (elf_file->virtual_base_address >= phdr->p_vaddr || elf_file->virtual_base_address == 0) {
-		elf_file->virtual_base_address = phdr->p_vaddr;
+	if (elf_file->virtual_base_address >= (void *)phdr->p_vaddr || elf_file->virtual_base_address == 0) {
+		elf_file->virtual_base_address = (void *)phdr->p_vaddr;
 		elf_file->physical_base_address = elf_file->elf_memory + phdr->p_offset;
 	}
 
@@ -130,11 +134,10 @@ int elf_process_pheader(struct elf_file *elf_file, struct elf32_phdr *phdr)
 	switch (phdr->p_type) {
 		case PT_LOAD:
 			res = elf_process_phdr_pt_load(elf_file, phdr);
-		break;
-		
+			break;
 		default:
 			res = -EINVAGS;
-		break;
+			break;
 	}
 	return res;
 }

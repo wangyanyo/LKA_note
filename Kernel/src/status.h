@@ -10,6 +10,7 @@
 #define ERDONLY 6
 #define ENOIMPL 7
 #define EISTKN 8
+#define EINFORMATS 9
 
 #define ERROR(value) (void *)(value)
 #define ERROR_I(value) (int)(value)

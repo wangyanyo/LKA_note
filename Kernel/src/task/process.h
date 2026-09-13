@@ -4,6 +4,12 @@
 #include "task.h"
 #include "config.h"
 
+typedef enum {
+	PROCESS_FILETYPE_ELF,
+	PROCESS_FILETYPE_BINARY,
+} PROCESS_FILETYPE;
+
+
 struct process {
 	/* The process id */
 	uint16_t id;
@@ -16,8 +22,11 @@ struct process {
 	/* The memory (malloc) allocations of the process */
 	void *allocations[KERNEL_MAX_PROGRAM_ALLOCATIONS];
 
-	/* The physical pointer to the process memory */
-	void *ptr;
+	PROCESS_FILETYPE filetype;
+	union {
+		void *ptr;
+		struct elf_file *elf_file;
+	};
 
 	/* The physical pointer to the stack memory */
 	void *stack;
