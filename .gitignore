@@ -1,6 +1,6 @@
 .vscode
 
-Kernel/build/**
+Kernel/**/build/**
 Kernel/bin/**
 
 !Kernel/build/**/
