@@ -251,3 +251,29 @@ int process_load_switch(char *filename, struct process **process)
 out:
 	return res;
 }
+
+static int process_find_free_allocations_index(struct process *process)
+{
+	for (int i = 0; i < KERNEL_MAX_PROGRAM_ALLOCATIONS; ++i) {
+		if (process->allocations[i] != NULL)
+			continue;
+		return i;
+	}
+	return -ENOMEM;
+}
+
+void *process_malloc(struct process *process, size_t size)
+{
+	void *ptr = kzalloc(size);
+	if (!ptr)
+		return NULL;
+	
+	int index = process_find_free_allocations_index(process);
+	if (index < 0) {
+		kfree(ptr);
+		return NULL;
+	}
+
+	process->allocations[index] = ptr;
+	return ptr;
+}

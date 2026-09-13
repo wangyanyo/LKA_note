@@ -48,5 +48,6 @@ int process_load_for_slot(char *filename, struct process **process, int process_
 int process_load(char *filename, struct process **process);
 int process_load_switch(char *filename, struct process **process);
 void *paging_align_address(void *ptr);
+void *process_malloc(struct process *process, size_t size);
 
 #endif
