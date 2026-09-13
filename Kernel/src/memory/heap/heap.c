@@ -114,7 +114,7 @@ out:
         return address;
 }
 
-static size_t heap_align_value_upper(size_t size)
+size_t heap_align_value_upper(size_t size)
 {
         if (size % KERNEL_HEAP_BLOCK_SIZE == 0) {
                 return size;
@@ -129,6 +129,17 @@ void *heap_malloc(struct heap *heap, size_t size)
         size_t aligned_size = heap_align_value_upper(size);
         uint32_t total_blocks = aligned_size / KERNEL_HEAP_BLOCK_SIZE;
         return heap_malloc_blocks(heap, total_blocks);
+}
+
+void *heap_zalloc(struct heap *heap, size_t size)
+{
+        size_t aligned_size = heap_align_value_upper(size);
+        uint32_t total_blocks = aligned_size / KERNEL_HEAP_BLOCK_SIZE;
+        void *address = heap_malloc_blocks(heap, total_blocks);
+	if (address == NULL)
+		return NULL;
+	memset(address, 0x00, aligned_size);
+	return address;
 }
 
 static void heap_mark_blocks_free(struct heap *heap, uint32_t start_block)

@@ -36,11 +36,12 @@ char *strcpy(char *dst, const char *str)
 
 char *strncpy(char *dst, const char *str, int n)
 {
+	int i = 0;
 	char *res = dst;
-	for (int i = 0; i < n && str[i]; ++i)
+	for (i = 0; i < n && str[i]; ++i)
 		dst[i] = str[i];
-	if (n > 0)
-		dst[n - 1] = 0x00;
+	if (i > 0)
+		dst[i] = 0x00;
 	return res;
 }
 
