@@ -1,8 +1,10 @@
 [BITS 32]
+section .asm
 global print:function
 global getkey:function
 global putchar:function
 global kernel_malloc:function
+global kernel_free:function
 
 ; void print(const char* filename)
 print:
@@ -40,6 +42,16 @@ kernel_malloc:
 	mov ebp, esp
 	push dword[ebp+8]
 	mov eax, 4
+	int 0x80
+	add esp, 4
+	pop ebp
+	ret
+
+kernel_free:
+	push ebp
+	mov ebp, esp
+	push dword[ebp+8]
+	mov eax, 5
 	int 0x80
 	add esp, 4
 	pop ebp

@@ -9,7 +9,9 @@ int main(int argc, char **argv)
 	ptr = malloc(512);
 	if (!ptr) {
 		print("malloc fail\n");
+		return -1;
 	}
+	free(ptr);
 
 	while(1) {
 		char key = getkey();

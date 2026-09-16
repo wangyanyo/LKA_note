@@ -277,3 +277,26 @@ void *process_malloc(struct process *process, size_t size)
 	process->allocations[index] = ptr;
 	return ptr;
 }
+
+static int process_allocation_unjoin(struct process *process, void *ptr)
+{
+	for (int i = 0; i < KERNEL_MAX_PROGRAM_ALLOCATIONS; ++i) {
+		if (process->allocations[i] != ptr)
+			continue;
+		process->allocations[i] = 0x00;
+		return i;
+	}
+	return -EINVAGS;
+}
+
+void process_free(struct process *process, void *ptr)
+{
+	if (!ptr)
+		return;
+
+	int index = process_allocation_unjoin(process, ptr);
+	if (index < 0)
+		return;
+
+	kfree(ptr);
+}
