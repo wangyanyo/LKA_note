@@ -13,6 +13,10 @@ int main(int argc, char **argv)
 	}
 	free(ptr);
 
+	print(itoa(123)); print("\n");
+	print(itoa(0)); print("\n");
+	print(itoa(-321)); print("\n");
+
 	while(1) {
 		char key = getkey();
 		if (key != 0) {
