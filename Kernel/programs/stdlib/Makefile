@@ -1,4 +1,4 @@
-FILES=./build/stdlib.o ./build/kernel.asm.o ./build/start.o
+FILES=./build/stdio.o ./build/stdlib.o ./build/kernel.asm.o ./build/start.o
 INCLUDES=-I./src
 FLAGS= -g
 
@@ -11,8 +11,11 @@ all: ${FILES}
 ./build/kernel.asm.o: ./src/kernel.asm
 	nasm -f elf ./src/kernel.asm -o ./build/kernel.asm.o
 
-./build/stdlib.o: 
+./build/stdlib.o: ./src/stdlib.c
 	i686-elf-gcc ${INCLUDES} $(FLAGS) -std=gnu99 -c ./src/stdlib.c -o ./build/stdlib.o
+
+./build/stdio.o: ./src/stdio.c
+	i686-elf-gcc ${INCLUDES} $(FLAGS) -std=gnu99 -c ./src/stdio.c -o ./build/stdio.o
 
 clean:
 	rm -rf ${FILES}

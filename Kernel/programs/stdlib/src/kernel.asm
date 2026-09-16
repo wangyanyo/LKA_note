@@ -2,7 +2,7 @@
 section .asm
 global print:function
 global getkey:function
-global putchar:function
+global kernel_putchar:function
 global kernel_malloc:function
 global kernel_free:function
 
@@ -26,7 +26,7 @@ getkey:
 	pop ebp
 	ret
 
-putchar:
+kernel_putchar:
 	push ebp
 	mov ebp, esp
 	push dword[ebp+8]
