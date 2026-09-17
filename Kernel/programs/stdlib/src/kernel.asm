@@ -1,7 +1,7 @@
 [BITS 32]
 section .asm
 global print:function
-global getkey:function
+global kernel_getkey:function
 global kernel_putchar:function
 global kernel_malloc:function
 global kernel_free:function
@@ -18,7 +18,7 @@ print:
 	ret
 
 ; int getkey()
-getkey:
+kernel_getkey:
 	push ebp
 	mov ebp, esp
 	mov eax, 2
