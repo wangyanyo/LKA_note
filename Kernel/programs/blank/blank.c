@@ -18,6 +18,8 @@ int main(int argc, char **argv)
 	print(itoa(0)); print("\n");
 	print(itoa(-321)); print("\n");
 
+	printf("My age is %i\n", 23);
+
 	while(1) {
 		char key = getkey();
 		if (key != 0) {
