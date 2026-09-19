@@ -10,6 +10,10 @@ int main(int argc, char **argv)
 	strcpy(ptr, "Hello World!\n");
 	print(ptr);
 
+	free(ptr);
+
+	print("abc\n");
+
 	while(1) {}
 	return 0;
 }

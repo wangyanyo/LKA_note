@@ -255,7 +255,7 @@ out:
 static int process_find_free_allocations_index(struct process *process)
 {
 	for (int i = 0; i < KERNEL_MAX_PROGRAM_ALLOCATIONS; ++i) {
-		if (process->allocations[i] != NULL)
+		if (process->allocations[i].ptr != NULL)
 			continue;
 		return i;
 	}
@@ -283,7 +283,8 @@ void *process_malloc(struct process *process, size_t size)
 	if (ret < 0)
 		goto out;
 
-	process->allocations[index] = ptr;
+	process->allocations[index].ptr = ptr;
+	process->allocations[index].size = size;
 
 out:
 	if (ret < 0) {
@@ -293,25 +294,30 @@ out:
 	return ptr;
 }
 
-static int process_allocation_unjoin(struct process *process, void *ptr)
+static int process_get_allocation_index_by_addr(struct process *process, void *ptr)
 {
-	for (int i = 0; i < KERNEL_MAX_PROGRAM_ALLOCATIONS; ++i) {
-		if (process->allocations[i] != ptr)
-			continue;
-		process->allocations[i] = 0x00;
-		return i;
-	}
-	return -EINVAGS;
+	int i;
+	for (i = 0; i < KERNEL_MAX_PROGRAM_ALLOCATIONS; ++i)
+		if (process->allocations[i].ptr == ptr)
+			return i;
+
+	return -1;
 }
 
 void process_free(struct process *process, void *ptr)
 {
-	if (!ptr)
+	if (!process || !ptr)
 		return;
 
-	int index = process_allocation_unjoin(process, ptr);
+	int index = process_get_allocation_index_by_addr(process, ptr);
 	if (index < 0)
 		return;
-
+	
+	struct process_allocation *allocation = &process->allocations[index];
+	paging_map_to(process->task->page_directory, ptr, allocation->ptr,
+		paging_align_address(allocation->ptr + allocation->size), 0x00);
+	
+	process->allocations[index].ptr = 0x00;
+	process->allocations[index].size = 0x00;
 	kfree(ptr);
 }
