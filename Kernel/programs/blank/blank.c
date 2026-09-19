@@ -6,14 +6,9 @@
 
 int main(int argc, char **argv)
 {
-	printf("My age is %i\n", 23);
-	char words[] = "hello how are you";
-
-	const char* token = strtok(words, " ");
-	while(token) {
-		printf("%s\n", token);
-		token = strtok(NULL, " ");
-	}
+	char *ptr = malloc(20);
+	strcpy(ptr, "Hello World!\n");
+	print(ptr);
 
 	while(1) {}
 	return 0;

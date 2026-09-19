@@ -264,17 +264,32 @@ static int process_find_free_allocations_index(struct process *process)
 
 void *process_malloc(struct process *process, size_t size)
 {
+	int ret = 0;
+
 	void *ptr = kzalloc(size);
-	if (!ptr)
-		return NULL;
+	if (!ptr) {
+		ret = -ENOMEM;
+		goto out;
+	}
 	
 	int index = process_find_free_allocations_index(process);
 	if (index < 0) {
-		kfree(ptr);
-		return NULL;
+		ret = -ENOMEM;
+		goto out;
 	}
 
+	ret = paging_map_to(process->task->page_directory, ptr, ptr, paging_align_address(ptr + size),
+		PAGING_IS_PRESENT | PAGING_IS_WRITEABLE | PAGING_ACCESS_FROM_ALL);
+	if (ret < 0)
+		goto out;
+
 	process->allocations[index] = ptr;
+
+out:
+	if (ret < 0) {
+		kfree(ptr);
+		ptr = NULL;
+	}
 	return ptr;
 }
 
