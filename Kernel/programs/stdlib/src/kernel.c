@@ -9,29 +9,30 @@ int kernel_getkeyblock()
 	return val;
 }
 
-void kernel_readline(char *out, int max, int output_while_typing)
+void kernel_terminal_readline(char *out, int max, int output_while_typing)
 {
-	int i;
+	int i = 0, j;
 	int key;
 
-	for (i = 0; i < max; ++i) {
+	while (i < max) {
 		key = kernel_getkeyblock();
-
 		if (key == 13) {
-			kernel_putchar('\n');
 			break;
+		}
+
+		if (key == 0x08) {
+			if (i >= 1 && output_while_typing)
+				kernel_putchar(key);
+			j = !i ? 0 : i - 1;
+			out[j] = 0x00;
+			i = j;
+			continue;
 		}
 
 		if (output_while_typing)
 			kernel_putchar(key);
-		
-		if (key == 0x08 && i >= 1) {
-			out[i] = 0x00;
-			i -= 2;
-			continue;
-		}
 
-		out[i] = key;
+		out[i++] = key;
 	}
 	out[i] = 0x00;
 }

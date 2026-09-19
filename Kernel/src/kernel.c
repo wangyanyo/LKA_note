@@ -148,11 +148,11 @@ void kernel_main()
 	isr80h_register_commands();
 
 	struct process *process = NULL;
-	int res = process_load_switch("0:/blank.elf", &process);
+	int res = process_load_switch("0:/shell.elf", &process);
 	if (res < 0)
 		panic("Failed to load blank.elf\n");
 	
-	kernel_test();
+	// kernel_test();
 
 	task_run_first_ever_task();
 

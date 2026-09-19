@@ -10,6 +10,6 @@ void kernel_putchar(char c);
 void *kernel_malloc(size_t size);
 void kernel_free(void *ptr);
 
-void kernel_readline(char *out, int max, int output_while_typing);
+void kernel_terminal_readline(char *out, int max, int output_while_typing);
 
 #endif

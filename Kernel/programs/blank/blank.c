@@ -21,7 +21,7 @@ int main(int argc, char **argv)
 	printf("My age is %i\n", 23);
 
 	char buf[1024];
-	kernel_readline(buf, 1024, 1);
+	kernel_terminal_readline(buf, 1024, 1);
 	print(buf);
 
 	return 0;
