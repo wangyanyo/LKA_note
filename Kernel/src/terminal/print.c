@@ -124,11 +124,16 @@ void ulong_to_hex_string(unsigned long num, char *str, uint32_t size)
 	__ulong_to_string(num, str, size, 16);
 }
 
-void terminal_print_num(unsigned long num)
+void terminal_print_num_without_endl(unsigned long num)
 {
 	char str[DEFAULT_STRING_SIZE];
 	ulong_to_string(num, str, DEFAULT_STRING_SIZE);
 	terminal_print(str);
+}
+
+void terminal_print_num(unsigned long num)
+{
+	terminal_print_num_without_endl(num);
 	terminal_print("\n");
 }
 

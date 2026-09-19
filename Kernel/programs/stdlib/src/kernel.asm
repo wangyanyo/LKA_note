@@ -6,6 +6,7 @@ global kernel_putchar:function
 global kernel_malloc:function
 global kernel_free:function
 global kernel_process_load_start:function
+global kernel_process_get_argument:function
 
 ; void print(const char* filename)
 print:
@@ -63,6 +64,16 @@ kernel_process_load_start:
 	mov ebp, esp
 	push dword[ebp+8]
 	mov eax, 6
+	int 0x80
+	add esp, 4
+	pop ebp
+	ret
+
+kernel_process_get_argument:
+	push ebp
+	mov ebp, esp
+	push dword[ebp+8]
+	mov eax, 8
 	int 0x80
 	add esp, 4
 	pop ebp

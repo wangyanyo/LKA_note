@@ -156,3 +156,10 @@ uint32_t paging_get(struct paging_4gb_chunk *directory, void *virt)
 	uint32_t *table = (uint32_t *)(entry & 0xFFFFF000);
 	return table[table_index];
 }
+
+void *paging_get_physical_address(struct paging_4gb_chunk *directory, void *virt) 
+{
+	void *virt_addr_new = paging_align_lower_address(virt);
+	uint32_t offset = (uint32_t)virt - (uint32_t)virt_addr_new;
+	return (void *)((paging_get(directory, virt_addr_new) & 0xFFFFF000) + offset);
+}

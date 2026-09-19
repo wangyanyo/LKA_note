@@ -7,6 +7,7 @@
 #include "string/string.h"
 #include "loader/formats/elfloader.h"
 #include "terminal/print.h"
+#include "kernel.h"
 
 static struct process *processes[KERNEL_MAX_PROCESSES] = {};
 static struct process *current_process;
@@ -268,20 +269,24 @@ void *process_malloc(struct process *process, size_t size)
 
 	void *ptr = kzalloc(size);
 	if (!ptr) {
+		pr_err("kzalloc fail\n");
 		ret = -ENOMEM;
 		goto out;
 	}
 	
 	int index = process_find_free_allocations_index(process);
 	if (index < 0) {
+		pr_err("process_find_free_allocations_index fail\n");
 		ret = -ENOMEM;
 		goto out;
 	}
 
 	ret = paging_map_to(process->task->page_directory, ptr, ptr, paging_align_address(ptr + size),
 		PAGING_IS_PRESENT | PAGING_IS_WRITEABLE | PAGING_ACCESS_FROM_ALL);
-	if (ret < 0)
+	if (ret < 0) {
+		pr_err("paging_map_to fail\n");
 		goto out;
+	}
 
 	process->allocations[index].ptr = ptr;
 	process->allocations[index].size = size;
@@ -320,4 +325,69 @@ void process_free(struct process *process, void *ptr)
 	process->allocations[index].ptr = 0x00;
 	process->allocations[index].size = 0x00;
 	kfree(ptr);
+}
+
+void process_get_arugment(struct process *process, int *argc, char ***argv)
+{
+	*argc = process->argument.argc;
+	*argv = process->argument.argv;
+}
+
+static int process_count_command_argument(struct command_arugment* root_argument)
+{
+	int res = 0;
+	struct command_arugment *current = root_argument;
+	while (current) {
+		res++;
+		current = current->next;
+	}
+	return res;
+}
+
+int process_inject_argument(struct process *process, struct command_arugment *root_argument)
+{
+	int res = 0;
+	int i = 0;
+	int argc;
+	char **argv;
+	char *argument_str;
+	struct command_arugment *current = root_argument;
+
+	argc = process_count_command_argument(root_argument);
+	if (argc == 0) {
+		pr_err("process_count_command_argument fail\n");
+		res = -EIO;
+		goto out;
+	}
+
+	argv = process_malloc(process, sizeof(char *) * argc);
+	if (!argv) {
+		pr_err("process_malloc fail\n");
+		res = -ENOMEM;
+		goto out;
+	}
+
+	while (current) {
+		argument_str = process_malloc(process, sizeof(current->argument) + 1);
+		if (!argument_str) {
+			pr_err("process_malloc fail\n");
+			res = -ENOMEM;
+			goto out;
+		}
+
+		strncpy(argument_str, current->argument, sizeof(current->argument));
+		argv[i++] = argument_str;
+		current = current->next;
+	}
+
+	process->argument.argc = argc;
+	process->argument.argv = argv;
+
+out:
+	if (res < 0) {
+		for (i = 0; i < argc; ++i)
+			process_free(process, argv[i]);
+		process_free(process, argv);
+	}
+	return res;
 }

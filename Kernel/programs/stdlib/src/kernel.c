@@ -1,7 +1,7 @@
 #include "kernel.h"
 #include "string.h"
 
-struct command_argument* peachos_parse_command(const char* command, int max)
+struct command_argument* kernel_parse_command(const char* command, int max)
 {
 	struct command_argument* root_command = 0;
 	char scommand[1024];

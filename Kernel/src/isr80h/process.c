@@ -24,3 +24,17 @@ void *isr80h_command6_process_load_start(struct interrupt_frame *frame)
 out:
 	return (void *)ret;
 }
+
+void *isr80h_command7_invake_system_command(struct interrupt_frame *frame)
+{
+	return 0;
+}
+
+void *isr80h_command8_get_program_argument(struct interrupt_frame *frame)
+{
+	struct process_arugment *arugment = task_virtual_addr_to_physical(task_current(),
+		task_get_stack_item(task_current(), 0));
+	// 这里有点thread_info的雏形，task->thread_info，process->task_struct，万变不器离其宗
+	process_get_arugment(task_current()->process, &arugment->argc, &arugment->argv);
+	return 0;
+}

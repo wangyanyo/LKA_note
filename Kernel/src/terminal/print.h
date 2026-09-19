@@ -18,4 +18,6 @@ void terminal_print_char(char c);
 
 void panic(char *msg);
 
+void terminal_print_num_without_endl(unsigned long num);
+
 #endif

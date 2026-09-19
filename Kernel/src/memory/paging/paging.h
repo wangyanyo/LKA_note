@@ -34,5 +34,6 @@ void *paging_align_lower_address(void *ptr);
 void *paging_align_address(void *ptr);
 
 uint32_t paging_get(struct paging_4gb_chunk *directory, void *virt);
+void *paging_get_physical_address(struct paging_4gb_chunk *directory, void *virt);
 
 #endif

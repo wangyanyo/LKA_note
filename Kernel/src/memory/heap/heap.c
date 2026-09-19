@@ -2,6 +2,7 @@
 #include "status.h"
 #include "memory/memory.h"
 #include "terminal/print.h"
+#include "kernel.h"
 #include <stdbool.h>
 
 static int heap_validate_table(void *ptr, void *end, struct heap_table *table)
@@ -101,8 +102,14 @@ static void *heap_malloc_blocks(struct heap *heap, uint32_t total_blocks)
 {
         void *address = 0;
         
+	if (!total_blocks) {
+		pr_err("total_blocks equal to 0\n");
+		return NULL;
+	} 
+
         int start_block = heap_get_start_block(heap, total_blocks);
         if (start_block < 0) {
+		pr_err("heap_get_start_block fail\n");
                 goto out;
         }
 

@@ -6,10 +6,10 @@
 
 int main(int argc, char **argv)
 {
-	char str[] = "hello world";
-	struct command_argument* root_command = peachos_parse_command(str, sizeof(str));
-	printf("%s\n", root_command->argument);
-	printf("%s\n", root_command->next->argument);
+	struct process_argument argument;
+	kernel_process_get_argument(&argument);
+
+	printf("%i, %s\n", argument.argc, argument.argv[0]);
 
 	while(1) {}
 	return 0;

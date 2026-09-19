@@ -3,6 +3,43 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "terminal/print.h"
+
+#define pr_err(msg) \
+	terminal_print(__FILE__); \
+	terminal_print(" "); \
+	terminal_print(__func__); \
+	terminal_print(":"); \
+	terminal_print_num_without_endl(__LINE__); \
+	terminal_print(" [E] "); \
+	terminal_print(msg); \
+
+#define pr_warn(msg) \
+	terminal_print(__FILE__); \
+	terminal_print(" "); \
+	terminal_print(__func__); \
+	terminal_print(":"); \
+	terminal_print_num_without_endl(__LINE__); \
+	terminal_print(" [W] "); \
+	terminal_print(msg); \
+
+#define pr_info(msg) \
+	terminal_print(__FILE__); \
+	terminal_print(" "); \
+	terminal_print(__func__); \
+	terminal_print(":"); \
+	terminal_print_num_without_endl(__LINE__); \
+	terminal_print(" [I] "); \
+	terminal_print(msg); \
+
+#define pr_debug(msg) \
+	terminal_print(__FILE__); \
+	terminal_print(" "); \
+	terminal_print(__func__); \
+	terminal_print(":"); \
+	terminal_print_num_without_endl(__LINE__); \
+	terminal_print(" [D] "); \
+	terminal_print(msg); \
 
 void kernel_main();
 

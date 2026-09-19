@@ -4,4 +4,8 @@
 struct interrupt_frame;
 void *isr80h_command6_process_load_start(struct interrupt_frame *frame);
 
+void *isr80h_command7_invake_system_command(struct interrupt_frame *frame);
+
+void *isr80h_command8_get_program_argument(struct interrupt_frame *frame);
+
 #endif

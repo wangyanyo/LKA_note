@@ -9,10 +9,20 @@ typedef enum {
 	PROCESS_FILETYPE_BINARY,
 } PROCESS_FILETYPE;
 
-
+// 这里已经有VA_area的雏形了
 struct process_allocation {
 	void *ptr;
 	size_t size;
+};
+
+struct command_arugment {
+	char argument[512];
+	struct command_arugment *next;
+};
+
+struct process_arugment {
+	int argc;
+	char **argv;
 };
 
 struct process {
@@ -45,6 +55,8 @@ struct process {
 		int tail;
 		int size;
 	} keyboard;
+
+	struct process_arugment argument;
 };
 
 struct process *process_get(int process_id);
@@ -55,5 +67,7 @@ int process_load_switch(char *filename, struct process **process);
 void *paging_align_address(void *ptr);
 void *process_malloc(struct process *process, size_t size);
 void process_free(struct process *process, void *ptr);
+void process_get_arugment(struct process *process, int *argc, char ***argv);
+int process_inject_argument(struct process *process, struct command_arugment *root_argument);
 
 #endif
