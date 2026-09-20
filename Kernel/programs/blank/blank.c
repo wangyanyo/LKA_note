@@ -6,10 +6,8 @@
 
 int main(int argc, char **argv)
 {
-	struct process_argument argument;
-	kernel_process_get_argument(&argument);
-
-	printf("%i, %s\n", argument.argc, argument.argv[0]);
+	printf("%i, %s\n", argc, argv[0]);
+	print("Hello World!\n");
 
 	while(1) {}
 	return 0;
