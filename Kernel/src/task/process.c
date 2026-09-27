@@ -396,3 +396,84 @@ out:
 	}
 	return res;
 }
+
+static void process_terminate_allocations(struct process *process)
+{
+	int i;
+	for (i = 0; i < KERNEL_MAX_PROGRAM_ALLOCATIONS; ++i)
+		process_free(process, process->allocations[i].ptr);
+}
+
+static void process_terminate_elf_data(struct process *process)
+{
+	elf_close(process->elf_file);
+}
+
+static void process_terminate_binary_data(struct process *process)
+{
+	kfree(process->ptr);
+}
+
+static int process_terminate_program_data(struct process *process)
+{
+	switch(process->filetype) {
+		case PROCESS_FILETYPE_ELF:
+			process_terminate_elf_data(process);
+			break;
+		case PROCESS_FILETYPE_BINARY:
+			process_terminate_binary_data(process);
+			break;
+		default:
+			return -EINVAGS;
+	}
+
+	return 0;
+}
+
+static void process_terminate_command_argument(struct process* process)
+{
+	int i;
+	for (i = 0; i < process->argument.argc; ++i)
+		kfree(process->argument.argv[i]);
+}
+
+static void process_switch_to_any()
+{
+	int i;
+	for (i = 0; i < KERNEL_MAX_PROCESSES; ++i) {
+		if (processes[i]) {
+			current_process = processes[i];
+			return;
+		}
+	}
+
+	panic("No processes to switch to\n");
+}
+
+static void process_unlink(struct process *process)
+{
+	processes[process->id] = 0x00;
+	
+	if (current_process == process)
+		process_switch_to_any();
+}
+
+int process_terminate(struct process *process)
+{
+	int ret = 0;
+
+	process_terminate_allocations(process);
+
+	ret = process_terminate_program_data(process);
+	if (ret < 0)
+		goto out;
+
+	process_terminate_command_argument(process);
+	
+	kfree(process->stack);
+	task_free(process->task);
+	process_unlink(process);
+
+out:
+	return ret;
+}
