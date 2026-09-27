@@ -89,3 +89,13 @@ void keyboard_backspace(struct process *process)
 	process->keyboard.tail = index;
 	process->keyboard.size--;
 }
+
+void keyboard_set_capslock(struct keyboard *keyboard, KEYBOARD_CAPS_LOCK_STATE state)
+{
+	keyboard->state = state;
+}
+
+KEYBOARD_CAPS_LOCK_STATE keyboard_get_capslock(struct keyboard *keyboard)
+{
+	return keyboard->state;
+}
