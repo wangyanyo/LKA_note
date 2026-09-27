@@ -1,6 +1,7 @@
 #include "kernel.h"
 
 extern int main(int argc, char** argv);
+extern void kernel_exit(int res);
 
 void c_start()
 {
@@ -8,7 +9,5 @@ void c_start()
 	kernel_process_get_argument(&argument);
 
 	int res = main(argument.argc, argument.argv);
-	if (res == 0) {
-
-	}
+	kernel_exit(res);
 }

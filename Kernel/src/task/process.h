@@ -57,6 +57,9 @@ struct process {
 	} keyboard;
 
 	struct process_argument argument;
+
+	/* 进程返回值 */
+	int res;
 };
 
 struct process *process_get(int process_id);

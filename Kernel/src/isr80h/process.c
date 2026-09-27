@@ -57,7 +57,7 @@ void *isr80h_command7_invake_system_command(struct interrupt_frame *frame)
 	
 	task_return(&process->task->registers);
 out:
-	return ERROR(ret);
+	return (void *)ret;
 	
 }
 
@@ -67,5 +67,19 @@ void *isr80h_command8_get_program_argument(struct interrupt_frame *frame)
 		task_get_stack_item(task_current(), 0));
 	// 这里有点thread_info的雏形，task->thread_info，process->task_struct，万变不器离其宗
 	process_get_argument(task_current()->process, &argument->argc, &argument->argv);
+	return 0;
+}
+
+/* 用户程序结束时，会向内核传递一个返回值，该返回值会通过内核转交给父进程 */
+void *isr80h_command9_exit(struct interrupt_frame *frame)
+{
+	void *item = task_get_stack_item(task_current(), 0);
+	struct process *process = task_current()->process;
+
+	process_terminate(process);
+	process->res = (int)item;
+
+	task_next();
+
 	return 0;
 }

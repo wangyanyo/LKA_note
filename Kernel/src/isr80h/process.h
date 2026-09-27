@@ -8,4 +8,6 @@ void *isr80h_command7_invake_system_command(struct interrupt_frame *frame);
 
 void *isr80h_command8_get_program_argument(struct interrupt_frame *frame);
 
+void *isr80h_command9_exit(struct interrupt_frame *frame);
+
 #endif
