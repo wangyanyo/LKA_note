@@ -26,4 +26,7 @@ struct command_argument* kernel_parse_command(const char* command, int max);
 
 void kernel_process_get_argument(struct process_argument *argument);
 
+int kernel_system(struct command_argument* arguments);
+int kernel_system_run(const char *command);
+
 #endif

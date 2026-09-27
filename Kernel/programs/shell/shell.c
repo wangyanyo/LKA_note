@@ -13,9 +13,9 @@ int main(int argc, char **argv)
 		kernel_terminal_readline(buf, 1024, 1);
 		print("\n");
 
-		ret = kernel_process_load_start(buf);
+		ret = kernel_system_run(buf);
 		if (ret < 0) {
-			printf("exec %s fail: %i\n", buf, ret);
+			printf("exec %s fail!\n", buf);
 		}
 	}
 	return 0;

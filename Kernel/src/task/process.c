@@ -327,31 +327,36 @@ void process_free(struct process *process, void *ptr)
 	kfree(ptr);
 }
 
-void process_get_arugment(struct process *process, int *argc, char ***argv)
+void process_get_argument(struct process *process, int *argc, char ***argv)
 {
 	*argc = process->argument.argc;
 	*argv = process->argument.argv;
 }
 
-static int process_count_command_argument(struct command_arugment* root_argument)
+static struct command_argument *process_get_next_command_argument(struct command_argument *command_argument)
+{
+	return task_virtual_addr_to_physical(process_current()->task, command_argument->next);
+}
+
+static int process_count_command_argument(struct command_argument* root_argument)
 {
 	int res = 0;
-	struct command_arugment *current = root_argument;
+	struct command_argument *current = root_argument;
 	while (current) {
 		res++;
-		current = current->next;
+		current = process_get_next_command_argument(current);
 	}
 	return res;
 }
 
-int process_inject_argument(struct process *process, struct command_arugment *root_argument)
+int process_inject_argument(struct process *process, struct command_argument *root_argument)
 {
 	int res = 0;
 	int i = 0;
 	int argc;
 	char **argv;
 	char *argument_str;
-	struct command_arugment *current = root_argument;
+	struct command_argument *current = root_argument;
 
 	argc = process_count_command_argument(root_argument);
 	if (argc == 0) {
@@ -377,7 +382,7 @@ int process_inject_argument(struct process *process, struct command_arugment *ro
 
 		strncpy(argument_str, current->argument, sizeof(current->argument));
 		argv[i++] = argument_str;
-		current = current->next;
+		current = process_get_next_command_argument(current);
 	}
 
 	process->argument.argc = argc;

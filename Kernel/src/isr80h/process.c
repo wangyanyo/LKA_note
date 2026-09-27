@@ -1,6 +1,8 @@
 #include "process.h"
 #include "task/process.h"
 #include "task/task.h"
+#include "status.h"
+#include "string/string.h"
 
 void *isr80h_command6_process_load_start(struct interrupt_frame *frame)
 {
@@ -27,14 +29,43 @@ out:
 
 void *isr80h_command7_invake_system_command(struct interrupt_frame *frame)
 {
-	return 0;
+	// 首先加载进程，然后设置argument，然后返回
+	int ret = 0;
+	struct command_argument *root_command_argument;
+	char filepath[KERNEL_MAX_PATH] = "0:/";
+	struct process *process = NULL;
+	char *program_name;
+
+	root_command_argument = task_virtual_addr_to_physical(task_current(),
+		task_get_stack_item(task_current(), 0));
+	if (!root_command_argument || strlen(root_command_argument->argument) == 0) {
+		ret = -EINVAGS;
+		goto out;
+	}
+
+	program_name = root_command_argument->argument;
+	strncpy(filepath + 3, program_name, KERNEL_MAX_PATH - 3);
+	ret = process_load_switch(filepath, &process);
+	if (ret < 0)
+		goto out;
+
+	task_switch(process->task);
+
+	ret = process_inject_argument(process, root_command_argument);
+	if (ret < 0)
+		goto out;
+	
+	task_return(&process->task->registers);
+out:
+	return ERROR(ret);
+	
 }
 
 void *isr80h_command8_get_program_argument(struct interrupt_frame *frame)
 {
-	struct process_arugment *arugment = task_virtual_addr_to_physical(task_current(),
+	struct process_argument *argument = task_virtual_addr_to_physical(task_current(),
 		task_get_stack_item(task_current(), 0));
 	// 这里有点thread_info的雏形，task->thread_info，process->task_struct，万变不器离其宗
-	process_get_arugment(task_current()->process, &arugment->argc, &arugment->argv);
+	process_get_argument(task_current()->process, &argument->argc, &argument->argv);
 	return 0;
 }
