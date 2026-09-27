@@ -54,4 +54,6 @@ void *task_get_stack_item(struct task *task, int index);
 
 void *task_virtual_addr_to_physical(struct task *task, void *virtual_addr);
 
+void task_next();
+
 #endif

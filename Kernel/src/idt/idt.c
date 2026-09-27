@@ -6,6 +6,7 @@
 #include "task/task.h"
 #include "kernel.h"
 #include "status.h"
+#include "task/process.h"
 
 struct idt_desc idt_descriptors[KERNEL_TOTAL_INTERRUPTS];
 struct idtr_desc idtr_descriptor;
@@ -21,9 +22,10 @@ extern void int21h();
 extern void no_interrupt();
 extern void isr80h_wrapper();
 
-static void idt_zero_callback(struct interrupt_frame *frame)
+static void idt_handle_exception()
 {
-        terminal_print_endl("Divide by zero error");
+	process_terminate(process_current());
+	task_next();
 }
 
 void interrupt_handler(int interrupt, struct interrupt_frame *frame)
@@ -53,15 +55,15 @@ void idt_init()
         idtr_descriptor.limit = sizeof(idt_descriptors) - 1;
         idtr_descriptor.base = (uint32_t)idt_descriptors;
 
-        for(int i = 0; i < KERNEL_TOTAL_INTERRUPTS; ++i) {
+        for (int i = 0; i < KERNEL_TOTAL_INTERRUPTS; ++i)
                 idt_set(i, interrupt_pointer_table[i]);
-        }
 
 	idt_set(0x80, isr80h_wrapper);
 
         idt_load(&idtr_descriptor);
 
-	idt_register_interrupt_callback(0x0, idt_zero_callback);
+	for (int i = 0; i < 0x20; ++i)
+		idt_register_interrupt_callback(i, idt_handle_exception);
 }
 
 int idt_register_interrupt_callback(int interrupt, INTERRUPT_CALLBACK_FUNCTION interrupt_callback)

@@ -233,7 +233,7 @@ out:
 	return res;
 }
 
-static int process_switch(struct process *process)
+int process_switch(struct process *process)
 {
 	/* 不用切换上下文吗？ */
 	current_process = process;

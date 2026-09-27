@@ -231,3 +231,20 @@ void *task_virtual_addr_to_physical(struct task *task, void *virtual_addr)
 {
 	return paging_get_physical_address(task->page_directory, virtual_addr);
 }
+
+/*
+ * 这是一个非常简单的调度器；调度器只需要处理两件事，1.当前进程执行多场时间，2.下一个进程如何选择
+ * 该调度器会在当前进程发生异常或结束时触发调度，下一个进程直接选择链表中的下一个进程；
+ * 由于在process_terminal函数中删除了task，所以现在的current_task就是下一个task
+ * 还要执行process_switch(next_task->process)，因为task和process是绑定的
+ */
+void task_next()
+{
+	struct task* next_task = current_task;
+	if (!next_task)
+		panic("No more tasks!\n");
+	
+	process_switch(next_task->process);
+	task_switch(next_task);
+	task_return(&next_task->registers);
+}
