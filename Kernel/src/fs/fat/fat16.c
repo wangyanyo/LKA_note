@@ -386,12 +386,17 @@ static struct fat_item *fat16_new_fat_item_for_directory_item(struct disk *disk,
 	return f_item;
 }
 
-static void fat16_to_proper_string(char **out, const char *in)
+static void fat16_to_proper_string(char **out, const char *in, size_t size)
 {
+	int i = 0;
 	while (*in != 0x00 && *in != 0x20) {
 		**out = *in;
 		*out += 1;
 		in += 1;
+
+		if (i >= size - 1)
+			break;
+		i++;
 	}
 	**out = 0x00;
 }
@@ -400,10 +405,10 @@ static void fat16_get_full_relative_filename(struct fat_directory_item *item, ch
 {
 	memset(out, 0x00, max_len);
 	char *out_tmp = out;
-	fat16_to_proper_string(&out_tmp, (const char *)item->filename);
+	fat16_to_proper_string(&out_tmp, (const char *)item->filename, sizeof(item->filename));
 	if (item->ext[0] != 0x00 && item->ext[0] != 0x20) {
 		*out_tmp++ = '.';
-		fat16_to_proper_string(&out_tmp, (const char *)item->ext);
+		fat16_to_proper_string(&out_tmp, (const char *)item->ext, sizeof(item->ext));
 	}
 }
 
