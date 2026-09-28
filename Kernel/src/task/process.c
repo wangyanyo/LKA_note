@@ -63,6 +63,9 @@ static int process_load_bin(char *filename, struct process *process)
 	process->size = stat.filesize;
 
 out:
+	if (res < 0)
+		kfree(program_data_ptr);
+
 	fclose(fd);
 	return res;
 }
