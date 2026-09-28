@@ -14,8 +14,7 @@ task_return:
 	push dword [ebx+44]     ; SS
 	push dword [ebx+40]     ; ESP
 
-	pushf
-	pop eax
+	mov eax, [ebx+36]
 	or eax, 0x200           ; 置 IF 位，开启中断
 	push eax                ; EFLAGS
 

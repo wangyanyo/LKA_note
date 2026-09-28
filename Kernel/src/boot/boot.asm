@@ -38,6 +38,8 @@ step2:
         mov ds, ax
         mov es, ax
         mov ss, ax
+	mov fs, ax
+	mov es, ax
         mov sp, 0x7C00
         sti
         
@@ -77,6 +79,17 @@ gdt_desc:
 
 [BITS 32]
 load32:
+	mov ax, DATA_SEG
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ss, ax
+
+	in al, 0x92
+	or al, 2
+	out 0x92, al
+
 	mov eax, 1
 	mov ecx, 100
 	mov edi, 0x0100000

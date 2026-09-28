@@ -28,7 +28,7 @@ struct gdt_structured gdt_structured[KERNEL_TOTAL_GDT_SEGMENTS] = {
 	{.base = 0x00, .limit = 0xFFFFFFFF, .type = 0x92},		/* kernel data */
 	{.base = 0x00, .limit = 0xFFFFFFFF, .type = 0xF8},		/* user code */
 	{.base = 0x00, .limit = 0xFFFFFFFF, .type = 0xF2},		/* user data */
-	{.base = (uint32_t)&tss, .limit = sizeof(tss), .type = 0xE9}, /* tss */
+	{.base = (uint32_t)&tss, .limit = sizeof(tss), .type = 0xE9}, 	/* tss */
 };
 
 void kernel_page()
@@ -119,7 +119,7 @@ void kernel_main()
 
 	memset(gdt_real, 0x00, sizeof(gdt_real));
 	gdt_structured_to_gdt(gdt_real, gdt_structured, KERNEL_TOTAL_GDT_SEGMENTS);
-	gdt_load(gdt_real, sizeof(gdt_real));
+	gdt_load(gdt_real, sizeof(gdt_real) - 1);
 
 	kheap_init();
 

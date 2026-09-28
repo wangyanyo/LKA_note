@@ -159,9 +159,7 @@ static int process_get_free_slot()
 int process_load_for_slot(char *filename, struct process **process, int process_slot)
 {
 	int res = 0;
-	struct task *task = NULL;
 	struct process *_process = NULL;
-	void *program_stack_ptr = NULL;
 
 	/* 检查参数合法性 */
 	if (!filename || !process || process_get(process_slot)) {
@@ -183,20 +181,18 @@ int process_load_for_slot(char *filename, struct process **process, int process_
 		goto out;
 
 	/* 申请一块栈内存，让stack指向这块内存 */
-	program_stack_ptr = kzalloc(KERNEL_USER_PROGRAM_STACK_SIZE);
-	if (!program_stack_ptr) {
+	_process->stack = kzalloc(KERNEL_USER_PROGRAM_STACK_SIZE);
+	if (!_process->stack) {
 		res = -ENOMEM;
 		goto out;
 	}
-	_process->stack = program_stack_ptr;
 
 	/* 创建一个task，并建立映射 */
-	task = task_new(_process);
-	if (!task) {
+	_process->task = task_new(_process);
+	if (!_process->task) {
 		res = -ENOMEM;
 		goto out;
 	}
-	_process->task = task;
 
 	res = process_map_memory(_process);
 	if (res < 0)
@@ -211,11 +207,10 @@ int process_load_for_slot(char *filename, struct process **process, int process_
 	processes[process_slot] = _process;
 out:
 	if (IS_ERROR(res)) {
-		if (_process && _process->task)
-			task_free(_process->task);
-		*process = NULL;
-		processes[process_slot] = NULL;
+		process_terminate(_process);
 		kfree(_process);
+		_process = NULL;
+		*process = NULL;
 	}
 
 	return res;
@@ -464,6 +459,9 @@ static void process_unlink(struct process *process)
 int process_terminate(struct process *process)
 {
 	int ret = 0;
+
+	if (!process)
+		return 0;
 
 	process_terminate_allocations(process);
 

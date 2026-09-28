@@ -108,7 +108,8 @@ int elf_validate_loaded(struct elf_header* header)
 	return (elf_valid_signature(header) &&
 		elf_valid_class(header) &&
 		elf_valid_encoding(header) &&
-		elf_has_program_header(header)) ?
+		elf_has_program_header(header) &&
+		elf_is_executable(header)) ?
 		KERNEL_ALL_OK : -EINFORMATS;
 }
 
@@ -174,6 +175,18 @@ out:
 	return res;
 }
 
+void elf_file_free(struct elf_file *elf_file)
+{
+	if (elf_file)
+		kfree(elf_file->elf_memory);
+	kfree(elf_file);
+}
+
+struct elf_file *elf_file_new()
+{
+	return (struct elf_file *)kzalloc(sizeof(struct elf_file));
+}
+
 int elf_load(const char* filename, struct elf_file** file_out)
 {
 	int res = 0;
@@ -182,7 +195,7 @@ int elf_load(const char* filename, struct elf_file** file_out)
 	struct file_stat file_stat;
 	void *elf_memory = NULL;
 	
-	elf_file = kzalloc(sizeof(struct elf_file));
+	elf_file = elf_file_new();
 	if (!elf_file) {
 		res = -ENOMEM;
 		goto out;
@@ -221,8 +234,7 @@ int elf_load(const char* filename, struct elf_file** file_out)
 close_out:
 	fclose(fd);
 free_out:
-	kfree(elf_file);
-	kfree(elf_memory);
+	elf_file_free(elf_file);
 out:
 	return res;
 }

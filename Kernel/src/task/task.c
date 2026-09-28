@@ -113,6 +113,9 @@ struct task *task_get_next()
 
 int task_free(struct task *task)
 {
+	if (!task)
+		return 0;
+
 	paging_free_4gb(task->page_directory);
 	task_list_remove(task);
 

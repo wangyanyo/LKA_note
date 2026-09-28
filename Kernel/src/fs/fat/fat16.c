@@ -174,7 +174,7 @@ out:
 
 static int fat16_get_first_cluster(struct fat_directory_item *item)
 {
-	return (item->high_16_bits_first_cluster) | (item->low_16_bits_first_cluster);
+	return (item->high_16_bits_first_cluster << 16) | (item->low_16_bits_first_cluster);
 }
 
 static int fat16_cluster_to_sector(struct fat_private *fat_private, int cluster)
@@ -213,7 +213,7 @@ out:
 
 static int fat16_check_cluster_entry(int entry)
 {
-	if (entry == 0xFF8 || entry == 0xFFF)
+	if (entry == 0xFFF8 || entry == 0xFFFF)
 		return -EIO;
 	if (entry == KERNEL_FAT16_BAD_SECTOR)
 		return -EIO;
@@ -542,7 +542,7 @@ static int fat16_get_root_directory(struct disk *disk, struct fat_private *fat_p
 	fat_directory->item = dir;
 	fat_directory->total = total_items;
 	fat_directory->sector_pos = root_dir_sector_pos;
-	fat_directory->ending_sector_pos = root_dir_sector_pos + root_dir_size / disk->sector_size;
+	fat_directory->ending_sector_pos = root_dir_sector_pos + total_sectors;
 
 out:
 	if (res < 0)
@@ -630,8 +630,9 @@ int fat16_read(struct disk *disk, void *descriptor, uint32_t size, uint32_t nmem
 
 		offset += size;
 		out_ptr += size;
-	} 
+	}
 
+	fat_desc->pos = offset;
 	res = nmemb;
 out:
 	return res;
