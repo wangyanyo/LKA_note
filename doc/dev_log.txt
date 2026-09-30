@@ -1,0 +1,5 @@
+Commit: Fork and Copy on write - Part 1
+Time: 2026/9/30 17:49
+DEV LOG: 
+        修改了目录结构，将内核代码搬到上层；更新仓库名称和README，此仓库不再是LKA_note，而是专用于微型内核项目；
+        执行了编译和用户程序测试，没有发现新增问题；

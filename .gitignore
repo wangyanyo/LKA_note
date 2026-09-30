@@ -1,9 +1,7 @@
-.vscode
+bin/**/*
+!bin/**/.keep
+!bin/**/
 
-Kernel/**/build/**
-Kernel/bin/**
-
-!Kernel/build/**/
-!Kernel/bin/**/
-
-!Kernel/**/.keep
+build/**/*
+!build/**/.keep
+!build/**/
