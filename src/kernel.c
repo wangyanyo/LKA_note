@@ -147,7 +147,7 @@ void kernel_main()
 
 	isr80h_register_commands();
 
-	struct process *process = NULL;
+	struct task_struct *process = NULL;
 	int res = process_load_switch("0:/shell.elf", &process);
 	if (res < 0)
 		panic("Failed to load shell.elf\n");

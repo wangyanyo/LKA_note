@@ -47,7 +47,7 @@ static int keyboard_get_last_index(int index)
 
 void keyboard_push(char c)
 {
-	struct process *process = process_current();
+	struct task_struct *process = process_current();
 	if (!process || !c)
 		return;
 	
@@ -62,7 +62,7 @@ void keyboard_push(char c)
 
 char keyboard_pop()
 {
-	struct process *process = process_current();
+	struct task_struct *process = process_current();
 	if (!process)
 		return 0x00;
 
@@ -76,7 +76,7 @@ char keyboard_pop()
 	process->keyboard.size--;
 	return c;
 }
-void keyboard_backspace(struct process *process)
+void keyboard_backspace(struct task_struct *process)
 {
 	if (!process)
 		return;

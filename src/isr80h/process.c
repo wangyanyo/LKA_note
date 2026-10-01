@@ -9,7 +9,7 @@ void *isr80h_command6_process_load_start(struct interrupt_frame *frame)
 	int ret = 0;
 	char *user_data_ptr = NULL;
 	char filepath[KERNEL_MAX_PATH] = "0:/";
-	struct process *process = NULL;
+	struct task_struct *process = NULL;
 
 	user_data_ptr = task_get_stack_item(task_current(), 0);
 	ret = copy_string_from_task(task_current(), user_data_ptr, filepath + 3, KERNEL_MAX_PATH - 3);
@@ -33,7 +33,7 @@ void *isr80h_command7_invake_system_command(struct interrupt_frame *frame)
 	int ret = 0;
 	struct command_argument *root_command_argument;
 	char filepath[KERNEL_MAX_PATH] = "0:/";
-	struct process *process = NULL;
+	struct task_struct *process = NULL;
 	char *program_name;
 
 	root_command_argument = task_virtual_addr_to_physical(task_current(),
@@ -74,7 +74,7 @@ void *isr80h_command8_get_program_argument(struct interrupt_frame *frame)
 void *isr80h_command9_exit(struct interrupt_frame *frame)
 {
 	void *item = task_get_stack_item(task_current(), 0);
-	struct process *process = task_current()->process;
+	struct task_struct *process = task_current()->process;
 
 	process_terminate(process);
 	process->res = (int)item;

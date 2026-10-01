@@ -9,10 +9,10 @@
 #include "terminal/print.h"
 #include "kernel.h"
 
-static struct process *processes[KERNEL_MAX_PROCESSES] = {};
-static struct process *current_process;
+static struct task_struct *processes[KERNEL_MAX_PROCESSES] = {};
+static struct task_struct *current_process;
 
-struct process *process_get(int process_id)
+struct task_struct *process_get(int process_id)
 {
 	if (process_id < 0 || process_id >= KERNEL_MAX_PROCESSES)
 		return NULL;
@@ -20,17 +20,17 @@ struct process *process_get(int process_id)
 	return processes[process_id];
 }
 
-struct process *process_current()
+struct task_struct *process_current()
 {
 	return current_process;
 }
 
-static void process_init(struct process *process)
+static void process_init(struct task_struct *process)
 {
-	memset(process, 0x00, sizeof(struct process));
+	memset(process, 0x00, sizeof(struct task_struct));
 }
 
-static int process_load_bin(char *filename, struct process *process)
+static int process_load_bin(char *filename, struct task_struct *process)
 {
 	int res = 0;
 	int fd;
@@ -71,7 +71,7 @@ out:
 }
 
 
-static int process_load_elf(char *filename, struct process *process)
+static int process_load_elf(char *filename, struct task_struct *process)
 {
 	int res = 0;
 	struct elf_file *elf_file = NULL;
@@ -86,7 +86,7 @@ static int process_load_elf(char *filename, struct process *process)
 	return res;
 }
 
-static int process_load_data(char *filename, struct process *process)
+static int process_load_data(char *filename, struct task_struct *process)
 {
 	int res = 0;
 	res = process_load_elf(filename, process);
@@ -95,7 +95,7 @@ static int process_load_data(char *filename, struct process *process)
 	return res;
 }
 
-static int process_map_elf(struct process *process)
+static int process_map_elf(struct task_struct *process)
 {
 	int res = 0;
 	struct elf_file *file = process->elf_file;
@@ -115,7 +115,7 @@ static int process_map_elf(struct process *process)
 	return res;
 }
 
-static int process_map_binary(struct process *process)
+static int process_map_binary(struct task_struct *process)
 {
 	int res = 0;
 	res = paging_map_to(process->task->page_directory, (void *)KERNEL_PROGRAM_VIRTUAL_ADDRESS, process->ptr,
@@ -123,7 +123,7 @@ static int process_map_binary(struct process *process)
 	return res;
 }
 
-static int process_map_memory(struct process *process)
+static int process_map_memory(struct task_struct *process)
 {
 	int res = 0;
 
@@ -156,10 +156,10 @@ static int process_get_free_slot()
 	return -EISTKN;
 }
 
-int process_load_for_slot(char *filename, struct process **process, int process_slot)
+int process_load_for_slot(char *filename, struct task_struct **process, int process_slot)
 {
 	int res = 0;
-	struct process *_process = NULL;
+	struct task_struct *_process = NULL;
 
 	/* 检查参数合法性 */
 	if (!filename || !process || process_get(process_slot)) {
@@ -168,7 +168,7 @@ int process_load_for_slot(char *filename, struct process **process, int process_
 	}
 
 	/* 创建process */
-	_process = kzalloc(sizeof(struct process));
+	_process = kzalloc(sizeof(struct task_struct));
 	if (!_process) {
 		res = -ENOMEM;
 		goto out;
@@ -216,7 +216,7 @@ out:
 	return res;
 }
 
-int process_load(char *filename, struct process **process)
+int process_load(char *filename, struct task_struct **process)
 {
 	int res = 0;
 	int process_slot = process_get_free_slot();
@@ -231,14 +231,14 @@ out:
 	return res;
 }
 
-int process_switch(struct process *process)
+int process_switch(struct task_struct *process)
 {
 	/* 不用切换上下文吗？ */
 	current_process = process;
 	return 0;
 }
 
-int process_load_switch(char *filename, struct process **process)
+int process_load_switch(char *filename, struct task_struct **process)
 {
 	int res = 0;
 	res = process_load(filename, process);
@@ -251,7 +251,7 @@ out:
 	return res;
 }
 
-static int process_find_free_allocations_index(struct process *process)
+static int process_find_free_allocations_index(struct task_struct *process)
 {
 	for (int i = 0; i < KERNEL_MAX_PROGRAM_ALLOCATIONS; ++i) {
 		if (process->allocations[i].ptr != NULL)
@@ -261,7 +261,7 @@ static int process_find_free_allocations_index(struct process *process)
 	return -ENOMEM;
 }
 
-void *process_malloc(struct process *process, size_t size)
+void *process_malloc(struct task_struct *process, size_t size)
 {
 	int ret = 0;
 
@@ -297,7 +297,7 @@ out:
 	return ptr;
 }
 
-static int process_get_allocation_index_by_addr(struct process *process, void *ptr)
+static int process_get_allocation_index_by_addr(struct task_struct *process, void *ptr)
 {
 	int i;
 	for (i = 0; i < KERNEL_MAX_PROGRAM_ALLOCATIONS; ++i)
@@ -307,7 +307,7 @@ static int process_get_allocation_index_by_addr(struct process *process, void *p
 	return -1;
 }
 
-void process_free(struct process *process, void *ptr)
+void process_free(struct task_struct *process, void *ptr)
 {
 	if (!process || !ptr)
 		return;
@@ -325,7 +325,7 @@ void process_free(struct process *process, void *ptr)
 	kfree(ptr);
 }
 
-void process_get_argument(struct process *process, int *argc, char ***argv)
+void process_get_argument(struct task_struct *process, int *argc, char ***argv)
 {
 	*argc = process->argument.argc;
 	*argv = process->argument.argv;
@@ -347,7 +347,7 @@ static int process_count_command_argument(struct command_argument* root_argument
 	return res;
 }
 
-int process_inject_argument(struct process *process, struct command_argument *root_argument)
+int process_inject_argument(struct task_struct *process, struct command_argument *root_argument)
 {
 	int res = 0;
 	int i = 0;
@@ -395,24 +395,24 @@ out:
 	return res;
 }
 
-static void process_terminate_allocations(struct process *process)
+static void process_terminate_allocations(struct task_struct *process)
 {
 	int i;
 	for (i = 0; i < KERNEL_MAX_PROGRAM_ALLOCATIONS; ++i)
 		process_free(process, process->allocations[i].ptr);
 }
 
-static void process_terminate_elf_data(struct process *process)
+static void process_terminate_elf_data(struct task_struct *process)
 {
 	elf_close(process->elf_file);
 }
 
-static void process_terminate_binary_data(struct process *process)
+static void process_terminate_binary_data(struct task_struct *process)
 {
 	kfree(process->ptr);
 }
 
-static int process_terminate_program_data(struct process *process)
+static int process_terminate_program_data(struct task_struct *process)
 {
 	switch(process->filetype) {
 		case PROCESS_FILETYPE_ELF:
@@ -428,7 +428,7 @@ static int process_terminate_program_data(struct process *process)
 	return 0;
 }
 
-static void process_terminate_command_argument(struct process* process)
+static void process_terminate_command_argument(struct task_struct* process)
 {
 	int i;
 	for (i = 0; i < process->argument.argc; ++i)
@@ -448,7 +448,7 @@ static void process_switch_to_any()
 	panic("No processes to switch to\n");
 }
 
-static void process_unlink(struct process *process)
+static void process_unlink(struct task_struct *process)
 {
 	processes[process->id] = 0x00;
 	
@@ -456,7 +456,7 @@ static void process_unlink(struct process *process)
 		process_switch_to_any();
 }
 
-int process_terminate(struct process *process)
+int process_terminate(struct task_struct *process)
 {
 	int ret = 0;
 

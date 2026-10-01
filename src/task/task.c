@@ -8,13 +8,13 @@
 #include "process.h"
 #include "loader/formats/elfloader.h"
 
-struct task *current_task = 0;
+struct thread_info *current_task = 0;
 
-struct task *task_head = 0;
-struct task *task_tail = 0;
+struct thread_info *task_head = 0;
+struct thread_info *task_tail = 0;
 
 /* 这里代码冗余，后续用嵌入式链表改造 */
-static void task_insert(struct task *task)
+static void task_insert(struct thread_info *task)
 {
 	if (!task_head) {
 		task_head = task;
@@ -29,7 +29,7 @@ static void task_insert(struct task *task)
 	task_tail = task;
 }
 
-static int task_init(struct task *task, struct process *process)
+static int task_init(struct thread_info *task, struct task_struct *process)
 {
 	task->page_directory = paging_new_4gb_chunk(PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
 	if (!task->page_directory)
@@ -50,7 +50,7 @@ static int task_init(struct task *task, struct process *process)
 }
 
 /* 这个链表维护起来太麻烦了，以后要换成嵌入式链表 */
-static void task_list_remove(struct task *task)
+static void task_list_remove(struct thread_info *task)
 {
 	if (task_head == task) {
 		task_head = task->next;
@@ -73,12 +73,12 @@ static void task_list_remove(struct task *task)
 	}
 }
 
-struct task *task_new(struct process *process)
+struct thread_info *task_new(struct task_struct *process)
 {
 	int res = 0;
-	struct task *task = NULL;
+	struct thread_info *task = NULL;
 
-	task = kzalloc(sizeof(struct task));
+	task = kzalloc(sizeof(struct thread_info));
 	if (!task) {
 		res = -ENOMEM;
 		goto out;
@@ -99,19 +99,19 @@ out:
 	return task;
 }
 
-struct task *task_current()
+struct thread_info *task_current()
 {
 	return current_task;
 }
 
-struct task *task_get_next()
+struct thread_info *task_get_next()
 {
 	if (!current_task || !current_task->next)
 		return task_head;
 	return current_task->next;
 }
 
-int task_free(struct task *task)
+int task_free(struct thread_info *task)
 {
 	if (!task)
 		return 0;
@@ -123,7 +123,7 @@ int task_free(struct task *task)
 	return 0;
 }
 
-int task_switch(struct task *task)
+int task_switch(struct thread_info *task)
 {
 	current_task = task;
 	paging_switch(task->page_directory);
@@ -137,7 +137,7 @@ int task_page()
 	return 0;
 }
 
-int task_page_task(struct task *task)
+int task_page_task(struct thread_info *task)
 {
 	user_registers();
 	task_switch(task);
@@ -154,7 +154,7 @@ int task_run_first_ever_task()
 	return 0;
 }
 
-static void task_save_state(struct task *task, struct interrupt_frame *frame)
+static void task_save_state(struct thread_info *task, struct interrupt_frame *frame)
 {
 	task->registers.ip = frame->ip;
 	task->registers.cs = frame->cs;
@@ -175,11 +175,11 @@ void task_current_save_state(struct interrupt_frame *frame)
 	if (!task_current())
 		panic("No current task to save");
 	
-	struct task *task = task_current();
+	struct thread_info *task = task_current();
 	task_save_state(task, frame);
 }
 
-int copy_string_from_task(struct task *task, void *virtual, void *phys, int max)
+int copy_string_from_task(struct thread_info *task, void *virtual, void *phys, int max)
 {
 	int res = 0;
 
@@ -220,7 +220,7 @@ out:
 
 }
 
-void *task_get_stack_item(struct task *task, int index)
+void *task_get_stack_item(struct thread_info *task, int index)
 {
 	void *result = 0;
 	uint32_t *sp_ptr = (uint32_t *)task->registers.esp;
@@ -230,7 +230,7 @@ void *task_get_stack_item(struct task *task, int index)
 	return result;
 }
 
-void *task_virtual_addr_to_physical(struct task *task, void *virtual_addr)
+void *task_virtual_addr_to_physical(struct thread_info *task, void *virtual_addr)
 {
 	return paging_get_physical_address(task->page_directory, virtual_addr);
 }
@@ -243,7 +243,7 @@ void *task_virtual_addr_to_physical(struct task *task, void *virtual_addr)
  */
 void task_next()
 {
-	struct task* next_task = current_task;
+	struct thread_info* next_task = current_task;
 	if (!next_task)
 		panic("No more tasks!\n");
 	

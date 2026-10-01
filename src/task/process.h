@@ -25,14 +25,14 @@ struct process_argument {
 	char **argv;
 };
 
-struct process {
+struct task_struct {
 	/* The process id */
 	uint16_t id;
 
 	char filename[KERNEL_MAX_PATH];
 
 	/* The main process task */
-	struct task *task;
+	struct thread_info *task;
 
 	/* The memory (malloc) allocations of the process */
 	struct process_allocation allocations[KERNEL_MAX_PROGRAM_ALLOCATIONS];
@@ -62,17 +62,17 @@ struct process {
 	int res;
 };
 
-struct process *process_get(int process_id);
-struct process *process_current();
-int process_load_for_slot(char *filename, struct process **process, int process_slot);
-int process_load(char *filename, struct process **process);
-int process_load_switch(char *filename, struct process **process);
+struct task_struct *process_get(int process_id);
+struct task_struct *process_current();
+int process_load_for_slot(char *filename, struct task_struct **process, int process_slot);
+int process_load(char *filename, struct task_struct **process);
+int process_load_switch(char *filename, struct task_struct **process);
 void *paging_align_address(void *ptr);
-void *process_malloc(struct process *process, size_t size);
-void process_free(struct process *process, void *ptr);
-void process_get_argument(struct process *process, int *argc, char ***argv);
-int process_inject_argument(struct process *process, struct command_argument *root_argument);
-int process_terminate(struct process *process);
-int process_switch(struct process *process);
+void *process_malloc(struct task_struct *process, size_t size);
+void process_free(struct task_struct *process, void *ptr);
+void process_get_argument(struct task_struct *process, int *argc, char ***argv);
+int process_inject_argument(struct task_struct *process, struct command_argument *root_argument);
+int process_terminate(struct task_struct *process);
+int process_switch(struct task_struct *process);
 
 #endif
