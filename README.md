@@ -5,8 +5,8 @@
 阶段三：进一步修改和扩展微型内核，直到能够直接替换Ubuntu的Linux内核，实际使用不会出现明显的功能和性能问题；
 
 ## 文档
-开发日志详见 doc/dev_log.txt \
-每日进展详见 doc/daily/
+开发日志详见 Documentation/dev_log.txt \
+每日进展详见 Documentation/daily/
 
 ## 进展
 2026/9/28：\

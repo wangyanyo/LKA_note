@@ -1,0 +1,25 @@
+#ifndef __KERNEL_PRINT_H
+#define __KERNEL_PRINT_H
+
+#include <stdint.h>
+#include <stddef.h>
+
+void terminal_initialize();
+
+void terminal_print(const char* str);
+
+void terminal_print_endl(const char* str);
+
+void terminal_print_num(unsigned long num);
+
+void terminal_print_hex(unsigned long num);
+
+void terminal_print_char(char c);
+
+void panic(char *msg);
+
+void terminal_print_num_without_endl(unsigned long num);
+
+void printk(const char *str);
+
+#endif

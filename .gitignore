@@ -1,11 +1,7 @@
-bin/**/*
-!bin/**/.keep
-!bin/**/
-
 build/**/*
 !build/**/.keep
 !build/**/
 
-programs/*/build/**/*
+programs/*/build/*
 !programs/*/build/.keep
 !programs/*/build/
