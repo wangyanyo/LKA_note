@@ -1,3 +1,8 @@
+Commit: Update daily
+Time: 2026/10/02 22:57
+DEV_LOG:
+        编写了“进程生命周期”项目相关的设计文档，目前还是草稿阶段；
+
 Commit: Fork and Copy on write - Part 3
 Time: 2026/10/01 21:38
 DEV_LOG:
